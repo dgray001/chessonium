@@ -11,4 +11,4 @@ plugins {
 }
 
 rootProject.name = "chessonium"
-include("app", "list", "utilities")
+include("app", "utilities")

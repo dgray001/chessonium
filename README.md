@@ -1,4 +1,4 @@
 
 ### Chessonium
 
-v0.0.0: initial commit
+v0.0.1: hello world
