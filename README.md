@@ -1,4 +1,4 @@
 
 ### Chessonium
 
-v0.0.2: JavaFX hello world
+v0.0.3: Initial attempts at making 8x8 grid
