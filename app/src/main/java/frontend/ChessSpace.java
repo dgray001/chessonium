@@ -5,13 +5,16 @@ import chess.ChessPosition;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import lombok.Getter;
 import lombok.Setter;
 import utilities.Logger;
 
 public class ChessSpace implements Clickable {
+  private ChessBoard board;
   @Getter
   private Pane pane;
   @Setter
@@ -24,15 +27,19 @@ public class ChessSpace implements Clickable {
   private boolean pressed = false;
   private boolean selected = false;
   private boolean justSelected = false;
+  private boolean moveTarget = false;
+  private Node moveTargetImage;
+  private ImageView pieceImage;
 
-  public ChessSpace(GridPane grid, int r, int c) {
+  public ChessSpace(ChessBoard board, int r, int c) {
+    this.board = board;
     this.r = r;
     this.c = c;
-    this.pane = new Pane();
+    this.pane = new StackPane();
     this.refreshBackgroundColor();
-    pane.prefWidthProperty().bind(Bindings.min(grid.widthProperty().divide(ChessPosition.BOARD_SIZE), grid.heightProperty().divide(ChessPosition.BOARD_SIZE)));
-    pane.prefHeightProperty().bind(Bindings.min(grid.widthProperty().divide(ChessPosition.BOARD_SIZE), grid.heightProperty().divide(ChessPosition.BOARD_SIZE)));
-    grid.add(pane, c, r);
+    pane.prefWidthProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessPosition.BOARD_SIZE), board.getNode().heightProperty().divide(ChessPosition.BOARD_SIZE)));
+    pane.prefHeightProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessPosition.BOARD_SIZE), board.getNode().heightProperty().divide(ChessPosition.BOARD_SIZE)));
+    board.getNode().add(pane, c, r);
     Clickable.instantiate(this);
   }
 
@@ -40,10 +47,16 @@ public class ChessSpace implements Clickable {
     return this.pane;
   }
 
-  public void setImage(ImageView img) {
-    img.fitHeightProperty().bind(this.pane.heightProperty());
-    img.fitWidthProperty().bind(this.pane.widthProperty());
-    this.pane.getChildren().add(img);
+  public void setPieceImage(ImageView pieceImage) {
+    if (this.pieceImage != null) {
+      this.pane.getChildren().remove(this.pieceImage);
+    }
+    this.pieceImage = pieceImage;
+    if (pieceImage != null) {
+      pieceImage.fitHeightProperty().bind(this.pane.heightProperty());
+      pieceImage.fitWidthProperty().bind(this.pane.widthProperty());
+      this.pane.getChildren().addFirst(pieceImage);
+    }
   }
 
   public void hover() {
@@ -55,9 +68,10 @@ public class ChessSpace implements Clickable {
   }
 
   public void press() {
-    if (piece != null) {
+    if (this.piece != null) {
       // TODO: check left vs right click
       this.selected = true;
+      this.board.spaceSelected(this.r, this.c);
     }
     this.refreshBackgroundColor();
   }
@@ -67,6 +81,7 @@ public class ChessSpace implements Clickable {
       if (this.selected) {
         if (this.justSelected) {
           this.selected = false;
+          this.board.clearSelectedAnnotations();
         }
         this.justSelected = !this.justSelected;
       }
@@ -77,20 +92,36 @@ public class ChessSpace implements Clickable {
     this.refreshBackgroundColor();
   }
 
-  public void clearAnnotations() {
+  public void setMoveTarget() {
+    this.moveTarget = true;
+    if (this.piece == null) {
+      Circle circ = new Circle();
+      circ.setFill(Color.web(((this.r + this.c) % 2 == 0) ? "#646f41" : "#829769"));
+      circ.radiusProperty().bind(this.pane.widthProperty().multiply(0.17));
+      this.moveTargetImage = circ;
+      this.pane.getChildren().add(circ);
+    }
+  }
+
+  public void clearSelectedAnnotations() {
     if (this.selected) {
       this.selected = false;
     } else {
       this.justSelected = false;
+    }
+    if (this.moveTarget) {
+      this.moveTarget = false;
+      this.pane.getChildren().remove(this.moveTargetImage);
+      this.moveTargetImage = null;
     }
     this.refreshBackgroundColor();
   }
 
   private void refreshBackgroundColor() {
     if (this.selected) {
-      pane.setStyle("-fx-background-color:#819669");
+      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646d40" : "-fx-background-color:#819669");
       return;
     }
-    pane.setStyle(((r + c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
+    this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
   }
 }

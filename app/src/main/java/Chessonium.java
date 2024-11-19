@@ -14,7 +14,7 @@ import javafx.stage.Stage;
 import utilities.Logger;
 
 public class Chessonium extends Application {
-  private static final int FPS = 1;
+  private static final int FPS = 30;
 
   @Override
   public void start(Stage stage) {

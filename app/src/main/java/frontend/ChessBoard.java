@@ -2,6 +2,7 @@ package frontend;
 
 import java.util.Map;
 
+import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.ChessStartPosition;
@@ -33,7 +34,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
     this.node.setAlignment(Pos.CENTER);
     for (int r = 0; r < ChessPosition.BOARD_SIZE; r++) {
       for (int c = 0; c < ChessPosition.BOARD_SIZE; c++) {
-        this.spaces[r][c] = new ChessSpace(this.node, r, c);
+        this.spaces[r][c] = new ChessSpace(this, r, c);
       }
     }
     this.node.setBackground(Background.fill(Color.GRAY));
@@ -42,9 +43,13 @@ public class ChessBoard extends FrontendElement implements Clickable {
   }
 
   public void press() {
+    this.clearSelectedAnnotations();
+  }
+
+  public void clearSelectedAnnotations() {
     for (int r = 0; r < spaces.length; r++) {
       for (int c = 0; c < spaces[r].length; c++) {
-        spaces[r][c].clearAnnotations();
+        spaces[r][c].clearSelectedAnnotations();
       }
     }
   }
@@ -89,10 +94,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
       public void run() {
         for (int r = 0; r < spaces.length; r++) {
           for (int c = 0; c < spaces[r].length; c++) {
-            spaces[r][c].getPane().getChildren().clear();
-            if (imgs[r][c] != null) {
-              spaces[r][c].setImage(imgs[r][c]);
-            }
+            spaces[r][c].setPieceImage(imgs[r][c]);
           }
         }
       }
@@ -106,6 +108,21 @@ public class ChessBoard extends FrontendElement implements Clickable {
     this.position = ChessPosition.createPosition(ChessStartPosition.STANDARD);
     this.propagatePosition();
     this.position.generateMoves();
+  }
+
+  public void spaceSelected(int r, int c) {
+    for (ChessMove mv : this.position.getChildren().keySet()) {
+      int start = Long.numberOfTrailingZeros(mv.start());
+      int start_r = start % 8;
+      int start_c = start / 8;
+      if (r != start_r || c != start_c) {
+        continue;
+      }
+      int end = Long.numberOfTrailingZeros(mv.end());
+      int end_r = end % 8;
+      int end_c = end / 8;
+      this.spaces[end_r][end_c].setMoveTarget();
+    }
   }
 
   private void propagatePosition() {

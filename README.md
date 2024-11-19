@@ -1,4 +1,4 @@
 
 ### Chessonium
 
-v0.0.5: Initial pawn move generation
+v0.0.6: Moves shown on frontend

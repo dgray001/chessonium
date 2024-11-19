@@ -14,18 +14,18 @@ public class ChessPosition {
   public static final int BOARD_SIZE = 8;
 
   // files are columns
-  private static long[] files = new long[]{
-    0x0101010101010101L,// every 8th bit is 1, starting with the first bit
-    0x0101010101010101L << 8,
-    0x0101010101010101L << 16,
-    0x0101010101010101L << 24,
-    0x0101010101010101L << 32,
-    0x0101010101010101L << 40,
-    0x0101010101010101L << 48,
-    0x0101010101010101L << 56
-  };
+  private static long[] files = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
   // files are rows
-  private static long[] ranks = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
+  private static long[] ranks = new long[]{
+    0x0101010101010101L,// every 8th bit is 1, starting with the first bit
+    0x0101010101010101L << 1,
+    0x0101010101010101L << 2,
+    0x0101010101010101L << 3,
+    0x0101010101010101L << 4,
+    0x0101010101010101L << 5,
+    0x0101010101010101L << 6,
+    0x0101010101010101L << 7
+  };
 
   // bitboard representation
   @Getter
@@ -156,6 +156,7 @@ public class ChessPosition {
     long forward = p << dir;
     if ((this.allPieces & forward) == 0) { // no capture going forward
       this.addPawnMove(new ChessMove(type, p, forward, false, false));
+      Logger.log(p + " " + forward + " " + ranks[1]);
       if ((ranks[this.whiteTurn ? 1 : 6] & p) > 0) { // check if pawn is on starting square
         long forward2 = forward << dir;
         if ((this.allPieces & forward2) == 0) { // no capture going forward
