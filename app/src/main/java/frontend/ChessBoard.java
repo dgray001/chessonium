@@ -6,50 +6,47 @@ import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.ChessStartPosition;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import lombok.Getter;
+import lombok.Setter;
 import utilities.Bitwise;
 import utilities.Logger;
 
-public class ChessBoard extends FrontendElement {
+public class ChessBoard extends FrontendElement implements Clickable {
   private ChessPosition position;
   private ChessSpace[][] spaces = new ChessSpace[ChessPosition.BOARD_SIZE][ChessPosition.BOARD_SIZE];
+  @Getter
+  private GridPane node;
+  @Setter
+  private boolean hovered = false;
+  @Setter
+  private boolean pressed = false;
 
   public Node _drawInitial() {
-    GridPane grid = new GridPane();
-    grid.setAlignment(Pos.CENTER);
+    this.node = new GridPane();
+    this.node.setAlignment(Pos.CENTER);
     for (int r = 0; r < ChessPosition.BOARD_SIZE; r++) {
       for (int c = 0; c < ChessPosition.BOARD_SIZE; c++) {
-        this.spaces[r][c] = new ChessSpace(grid, r, c);
+        this.spaces[r][c] = new ChessSpace(this.node, r, c);
       }
     }
-    grid.setBackground(Background.fill(Color.GRAY));
+    this.node.setBackground(Background.fill(Color.GRAY));
+    Clickable.instantiate(this);
+    return this.node;
+  }
 
-    grid.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
-      @Override
-      public void handle(MouseEvent mouseEvent) {
-        for (int r = 0; r < spaces.length; r++) {
-          for (int c = 0; c < spaces[r].length; c++) {
-            spaces[r][c].clearAnnotations();
-          }
-        }
+  public void press() {
+    for (int r = 0; r < spaces.length; r++) {
+      for (int c = 0; c < spaces[r].length; c++) {
+        spaces[r][c].clearAnnotations();
       }
-    });
-
-    grid.addEventFilter(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
-      @Override
-      public void handle(MouseEvent mouseEvent) {
-      }
-    });
-
-    return grid;
+    }
   }
 
   public void draw() {
@@ -103,18 +100,22 @@ public class ChessBoard extends FrontendElement {
   }
 
   public void setupBoard() {
+    if (this.position != null) {
+      return;
+    }
     this.position = ChessPosition.createPosition(ChessStartPosition.STANDARD);
     this.propagatePosition();
+    this.position.generateMoves();
   }
 
   private void propagatePosition() {
     if (this.position == null) {
       return;
     }
-    for (int r = 0; r < this.position.getMailbox().length; r++) {
-      for (int c = 0; c < this.position.getMailbox()[r].length; c++) {
-        this.spaces[r][c].setPiece(ChessPiece.fromInt(this.position.getMailbox()[r][c]));
-      }
+    for (int p = 0; p < this.position.getMailbox().length; p++) {
+      int r = p % 8;
+      int c = p / 8;
+      this.spaces[r][c].setPiece(ChessPiece.fromInt(this.position.getMailbox()[p]));
     }
   }
 }

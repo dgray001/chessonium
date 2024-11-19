@@ -3,20 +3,27 @@ package chess;
 public enum ChessPieceType {
   ERROR(0),
   PAWN(1),
-  BISHOP(2),
-  KNIGHT(3),
+  KNIGHT(2),
+  BISHOP(3),
   ROOK(4),
   QUEEN(5),
   KING(6),
   ;
 
-  private final short value;
+  public static final byte PAWN_VALUE = 1;
+  public static final byte KNIGHT_VALUE = 2;
+  public static final byte BISHOP_VALUE = 3;
+  public static final byte ROOK_VALUE = 4;
+  public static final byte QUEEN_VALUE = 5;
+  public static final byte KING_VALUE = 6;
+
+  private final byte value;
 
   private ChessPieceType(int value) {
-    this.value = (short) value;
+    this.value = (byte) value;
   }
 
-  public short getShort() {
+  public byte getByte() {
     return value;
   }
 

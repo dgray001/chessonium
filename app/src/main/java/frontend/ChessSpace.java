@@ -55,11 +55,10 @@ public class ChessSpace implements Clickable {
   }
 
   public void press() {
-    if (piece == null) {
-      return;
+    if (piece != null) {
+      // TODO: check left vs right click
+      this.selected = true;
     }
-    this.selected = true;
-    // TODO: check left vs right click
     this.refreshBackgroundColor();
   }
 
@@ -79,7 +78,11 @@ public class ChessSpace implements Clickable {
   }
 
   public void clearAnnotations() {
-    this.selected = false;
+    if (this.selected) {
+      this.selected = false;
+    } else {
+      this.justSelected = false;
+    }
     this.refreshBackgroundColor();
   }
 
