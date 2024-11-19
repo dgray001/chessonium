@@ -7,7 +7,8 @@ public enum ChessPieceType {
   KNIGHT(3),
   ROOK(4),
   QUEEN(5),
-  KING(6);
+  KING(6),
+  ;
 
   private final short value;
 
@@ -17,5 +18,10 @@ public enum ChessPieceType {
 
   public short getShort() {
     return value;
+  }
+
+  @Override
+  public String toString() {
+    return this.name().toLowerCase();
   }
 }

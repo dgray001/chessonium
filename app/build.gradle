@@ -1,10 +1,11 @@
 plugins {
   id 'buildlogic.java-application-conventions'
   id 'org.openjfx.javafxplugin' version '0.1.0'
+  id 'io.freefair.lombok' version '8.11'
 }
 
 dependencies {
-  implementation(project(":utilities"))
+  implementation(project(':utilities'))
 }
 
 repositories {
@@ -12,7 +13,7 @@ repositories {
 }
 
 javafx {
-  version = "21"
+  version = '21'
   modules = [ 'javafx.controls' ]
 }
 

@@ -1,4 +1,4 @@
 
 ### Chessonium
 
-v0.0.3: Initial attempts at making 8x8 grid
+v0.0.4: Can setup board and select spaces

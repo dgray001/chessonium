@@ -3,8 +3,25 @@ package chess;
 import utilities.Bitwise;
 
 public class ChessPiece {
-  private boolean color;
   private ChessPieceType type;
+  private boolean color;
+
+  public ChessPiece(ChessPieceType type, boolean color) {
+    this.type = type;
+    this.color = color;
+  }
+
+  public static ChessPiece fromInt(int i) {
+    short[] s = Bitwise.split(i);
+    if (s[1] == 0) {
+      return null;
+    }
+    return new ChessPiece(ChessPieceType.values()[s[1]], s[0] > 0);
+  }
+
+  public String imagePath() {
+    return this.type.toString() + "_" + (this.color ? "white" : "black");
+  }
 
   @Override
   public boolean equals(Object obj) {
@@ -15,7 +32,7 @@ public class ChessPiece {
       return false;
     }
     ChessPiece piece = (ChessPiece) obj;
-    return this.color == piece.color && this.type == piece.type;
+    return this.type == piece.type && this.color == piece.color;
   }
 
   @Override
