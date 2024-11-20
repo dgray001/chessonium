@@ -1,4 +1,4 @@
 
 ### Chessonium
 
-v0.0.7: Can make basic pawn moves
+v0.0.8: Can capture en passant

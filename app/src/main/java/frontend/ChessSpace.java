@@ -105,6 +105,7 @@ public class ChessSpace implements Clickable {
     } else {
       this.selected = false;
       this.justSelected = false;
+      this.board.clearSelectedAnnotations();
     }
     this.refreshBackgroundColor();
   }

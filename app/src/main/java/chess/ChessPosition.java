@@ -39,8 +39,8 @@ public class ChessPosition {
   private int[] mailbox;
   // true if white's turn, false if black's turn
   private boolean whiteTurn;
-  // bitwise representation of which file(s) the current player's turn can attack en passant
-  private byte enPassant;
+  // bitwise representation of which space the current player's turn can attack en passant
+  private long enPassant;
   // bitwise representation of castling rights -> first bit is white castling kingside, then white castling queenside, etc...
   private byte castlingRights;
   // all valid child positions
@@ -154,29 +154,29 @@ public class ChessPosition {
   private void generatePawnMoves(int type, long p) {
     long forward = this.whiteTurn ? (p << 1) : (p >>> 1);
     if ((this.allPieces & forward) == 0) { // no capture going forward
-      this.addPawnMove(new ChessMove(type, p, forward, false, false));
+      this.addPawnMove(ChessMove.createChessMove(type, p, forward));
       if ((ranks[this.whiteTurn ? 1 : 6] & p) > 0) { // check if pawn is on starting square
         long forward2 = this.whiteTurn ? (forward << 1) : (forward >>> 1);
         if ((this.allPieces & forward2) == 0) { // no capture going forward
-          this.applyMove(new ChessMove(type, p, forward2, false, false));
+          this.addPawnMove(ChessMove.createChessMove(type, p, forward2, forward));
         }
       }
     }
     long attack1 = this.whiteTurn ? (p >>> 7) : (p << 7);
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) > 0) { // must capture going diagonal
-      ChessMove mv = new ChessMove(type, p, attack1, false, false);
-      this.addPawnMove(mv);
+      this.addPawnMove(ChessMove.createChessMove(type, p, attack1));
+    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) > 0) && ((attack1 & this.enPassant) > 0)) { // en passant
+      this.addPawnMove(ChessMove.createChessMove(type, p, attack1, false, true));
     }
     long attack2 = this.whiteTurn ? (p << 9) : (p >>> 9);
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) > 0) { // must capture going diagonal
-      ChessMove mv = new ChessMove(type, p, attack2, false, false);
-      this.addPawnMove(mv);
+      this.addPawnMove(ChessMove.createChessMove(type, p, attack2));
+    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) > 0) && ((attack2 & this.enPassant) > 0)) { // en passant
+      this.addPawnMove(ChessMove.createChessMove(type, p, attack2, false, true));
     }
-    // TODO: check en passant move(s)
   }
 
   private void addPawnMove(ChessMove mv) {
-    // check if it creates en passant
     // check if it's a promotion move
     this.applyMove(mv);
   }
@@ -189,27 +189,33 @@ public class ChessPosition {
     result.blackPieces = this.blackPieces;
     result.mailbox = Arrays.copyOf(mailbox, mailbox.length);
     result.whiteTurn = !this.whiteTurn;
-    result.enPassant = this.enPassant;
-    result.castlingRights = this.castlingRights;
+    result.enPassant = mv.enPassant();
+    result.castlingRights = this.castlingRights; // TODO: implement
     result.allPieces &= ~mv.start();
     result.allPieces |= mv.end();
+    long captureSquare = mv.end();
+    if (mv.isEnPassant()) {
+      captureSquare = this.whiteTurn ? (captureSquare >>> 1) : (captureSquare << 1);
+      result.allPieces &= ~captureSquare;
+      result.mailbox[Long.numberOfTrailingZeros(captureSquare)] = 0;
+    }
     if (this.whiteTurn) {
       result.whitePieces &= ~mv.start();
       result.whitePieces |= mv.end();
-      result.blackPieces &= ~mv.end();
+      result.blackPieces &= ~captureSquare;
     } else {
       result.blackPieces &= ~mv.start();
       result.blackPieces |= mv.end();
-      result.whitePieces &= ~mv.end();
+      result.whitePieces &= ~captureSquare;
     }
     long bitboard = result.pieces.get(mv.piece());
     bitboard &= ~mv.start();
     bitboard |= mv.end();
     result.pieces.put(mv.piece(), bitboard);
-    int capturedPiece = result.mailbox[Long.numberOfTrailingZeros(mv.end())];
+    int capturedPiece = result.mailbox[Long.numberOfTrailingZeros(captureSquare)];
     if (capturedPiece > 0) {
       long capturedBitboard = result.pieces.get(capturedPiece);
-      capturedBitboard &= ~mv.end();
+      capturedBitboard &= ~captureSquare;
       result.pieces.put(capturedPiece, capturedBitboard);
     }
     result.mailbox[Long.numberOfTrailingZeros(mv.start())] = 0;
