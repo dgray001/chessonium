@@ -1,9 +1,12 @@
 package frontend;
 
+import java.net.URISyntaxException;
+
 import chess.ChessPiece;
 import chess.ChessPosition;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -47,6 +50,15 @@ public class ChessSpace implements Clickable {
     return this.pane;
   }
 
+  public ImageView getPieceImage() throws URISyntaxException {
+    if (this.piece == null) {
+      return null;
+    }
+    // TODO: get img from image service which caches images
+    Image img = new Image(ClassLoader.getSystemClassLoader().getResource("images/" + piece.imagePath() + "_medium.png").toURI().toString());
+    return new ImageView(img);
+  }
+
   public void setPieceImage(ImageView pieceImage) {
     if (this.pieceImage != null) {
       this.pane.getChildren().remove(this.pieceImage);
@@ -68,6 +80,11 @@ public class ChessSpace implements Clickable {
   }
 
   public void press() {
+    if (this.moveTarget) {
+      this.board.moveTargetPressed(this.r, this.c);
+      return;
+    }
+    this.board.pressFromSpace();
     if (this.piece != null) {
       // TODO: check left vs right click
       this.selected = true;
@@ -97,9 +114,11 @@ public class ChessSpace implements Clickable {
     if (this.piece == null) {
       Circle circ = new Circle();
       circ.setFill(Color.web(((this.r + this.c) % 2 == 0) ? "#646f41" : "#829769"));
-      circ.radiusProperty().bind(this.pane.widthProperty().multiply(0.17));
+      circ.radiusProperty().bind(this.pane.widthProperty().multiply(0.15));
       this.moveTargetImage = circ;
       this.pane.getChildren().add(circ);
+    } else {
+      // TODO: implement
     }
   }
 
@@ -118,10 +137,12 @@ public class ChessSpace implements Clickable {
   }
 
   private void refreshBackgroundColor() {
-    if (this.selected) {
+    if (this.hovered && this.moveTarget) {
+      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646f41" : "-fx-background-color:#829769");
+    } else if (this.selected) {
       this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646d40" : "-fx-background-color:#819669");
-      return;
+    } else {
+      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
     }
-    this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
   }
 }

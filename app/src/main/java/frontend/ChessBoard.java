@@ -28,6 +28,8 @@ public class ChessBoard extends FrontendElement implements Clickable {
   private boolean hovered = false;
   @Setter
   private boolean pressed = false;
+  private int selected_r = -1;
+  private int selected_c = -1;
 
   public Node _drawInitial() {
     this.node = new GridPane();
@@ -42,11 +44,13 @@ public class ChessBoard extends FrontendElement implements Clickable {
     return this.node;
   }
 
-  public void press() {
+  public void pressFromSpace() {
     this.clearSelectedAnnotations();
   }
 
   public void clearSelectedAnnotations() {
+    this.selected_r = -1;
+    this.selected_c = -1;
     for (int r = 0; r < spaces.length; r++) {
       for (int c = 0; c < spaces[r].length; c++) {
         spaces[r][c].clearSelectedAnnotations();
@@ -70,7 +74,25 @@ public class ChessBoard extends FrontendElement implements Clickable {
       }
     } else {
       try {
-        for (Map.Entry<Integer, Long> entry : this.position.getPieces().entrySet()) {
+        // draw from existant images
+    for (int r = 0; r < spaces.length; r++) {
+      for (int c = 0; c < spaces[r].length; c++) {
+        imgs[r][c] = spaces[r][c].getPieceImage();
+      }
+    }
+        // draw from mailbox
+        /*for (int p = 0; p < this.position.getMailbox().length; p++) {
+          ChessPiece piece = ChessPiece.fromInt(this.position.getMailbox()[p]);
+          if (piece == null) {
+            continue;
+          }
+          Image img = new Image(ClassLoader.getSystemClassLoader().getResource("images/" + piece.imagePath() + "_medium.png").toURI().toString());
+          int r = p % 8;
+          int c = p / 8;
+          imgs[r][c] = new ImageView(img);
+        }*/
+        // draw from bitboard
+        /*for (Map.Entry<Integer, Long> entry : this.position.getPieces().entrySet()) {
           ChessPiece piece = ChessPiece.fromInt(entry.getKey());
           if (entry.getValue() == 0) {
             continue;
@@ -85,7 +107,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
             int c = i / 8;
             imgs[r][c] = new ImageView(img);
           }
-        }
+        }*/
       } catch (Exception e) {
         Logger.err(e.getMessage());
       }
@@ -107,10 +129,11 @@ public class ChessBoard extends FrontendElement implements Clickable {
     }
     this.position = ChessPosition.createPosition(ChessStartPosition.STANDARD);
     this.propagatePosition();
-    this.position.generateMoves();
   }
 
   public void spaceSelected(int r, int c) {
+    this.selected_r = r;
+    this.selected_c = c;
     for (ChessMove mv : this.position.getChildren().keySet()) {
       int start = Long.numberOfTrailingZeros(mv.start());
       int start_r = start % 8;
@@ -125,10 +148,32 @@ public class ChessBoard extends FrontendElement implements Clickable {
     }
   }
 
+  public void moveTargetPressed(int r, int c) {
+    for (ChessMove mv : this.position.getChildren().keySet()) {
+      int start = Long.numberOfTrailingZeros(mv.start());
+      int start_r = start % 8;
+      int start_c = start / 8;
+      if (selected_r != start_r || selected_c != start_c) {
+        continue;
+      }
+      int end = Long.numberOfTrailingZeros(mv.end());
+      int end_r = end % 8;
+      int end_c = end / 8;
+      if (r != end_r || c != end_c) {
+        continue;
+      }
+      this.position = this.position.getChildren().get(mv);
+      break;
+    }
+    this.propagatePosition();
+    this.clearSelectedAnnotations();
+  }
+
   private void propagatePosition() {
     if (this.position == null) {
       return;
     }
+    this.position.generateMoves();
     for (int p = 0; p < this.position.getMailbox().length; p++) {
       int r = p % 8;
       int c = p / 8;

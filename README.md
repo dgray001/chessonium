@@ -1,4 +1,4 @@
 
 ### Chessonium
 
-v0.0.6: Moves shown on frontend
+v0.0.7: Can make basic pawn moves

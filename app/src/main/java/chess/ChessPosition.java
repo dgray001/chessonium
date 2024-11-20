@@ -152,24 +152,22 @@ public class ChessPosition {
   }
 
   private void generatePawnMoves(int type, long p) {
-    int dir = this.whiteTurn ? 1 : -1;
-    long forward = p << dir;
+    long forward = this.whiteTurn ? (p << 1) : (p >>> 1);
     if ((this.allPieces & forward) == 0) { // no capture going forward
       this.addPawnMove(new ChessMove(type, p, forward, false, false));
-      Logger.log(p + " " + forward + " " + ranks[1]);
       if ((ranks[this.whiteTurn ? 1 : 6] & p) > 0) { // check if pawn is on starting square
-        long forward2 = forward << dir;
+        long forward2 = this.whiteTurn ? (forward << 1) : (forward >>> 1);
         if ((this.allPieces & forward2) == 0) { // no capture going forward
           this.applyMove(new ChessMove(type, p, forward2, false, false));
         }
       }
     }
-    long attack1 = p << -7 * dir;
+    long attack1 = this.whiteTurn ? (p >>> 7) : (p << 7);
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) > 0) { // must capture going diagonal
       ChessMove mv = new ChessMove(type, p, attack1, false, false);
       this.addPawnMove(mv);
     }
-    long attack2 = p << 9 * dir;
+    long attack2 = this.whiteTurn ? (p << 9) : (p >>> 9);
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) > 0) { // must capture going diagonal
       ChessMove mv = new ChessMove(type, p, attack2, false, false);
       this.addPawnMove(mv);
@@ -208,6 +206,14 @@ public class ChessPosition {
     bitboard &= ~mv.start();
     bitboard |= mv.end();
     result.pieces.put(mv.piece(), bitboard);
+    int capturedPiece = result.mailbox[Long.numberOfTrailingZeros(mv.end())];
+    if (capturedPiece > 0) {
+      long capturedBitboard = result.pieces.get(capturedPiece);
+      capturedBitboard &= ~mv.end();
+      result.pieces.put(capturedPiece, capturedBitboard);
+    }
+    result.mailbox[Long.numberOfTrailingZeros(mv.start())] = 0;
+    result.mailbox[Long.numberOfTrailingZeros(mv.end())] = mv.piece();
     // special rules for casting and en passant
     this.children.put(mv, result);
     return result;
