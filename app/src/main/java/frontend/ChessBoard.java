@@ -1,7 +1,5 @@
 package frontend;
 
-import java.util.Map;
-
 import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
@@ -16,7 +14,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
-import utilities.Bitwise;
 import utilities.Logger;
 
 public class ChessBoard extends FrontendElement implements Clickable {
@@ -174,6 +171,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
       return;
     }
     this.position.generateMoves();
+    this.position.trimCheckMoves();
     for (int p = 0; p < this.position.getMailbox().length; p++) {
       int r = p % 8;
       int c = p / 8;

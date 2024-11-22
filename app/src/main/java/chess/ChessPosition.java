@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import utilities.Bitwise;
@@ -47,6 +48,7 @@ public class ChessPosition {
   @Getter
   private Map<ChessMove, ChessPosition> children;
   private boolean movesGenerated = false;
+  private boolean checkMovesTrimmed = false;
   private long spacesAttacked;
 
   public static ChessPosition createPosition(ChessStartPosition startPosition) {
@@ -140,6 +142,7 @@ public class ChessPosition {
             this.generatePawnMoves(piece, lsb);
             break;
           case ChessPieceType.KNIGHT_VALUE:
+            this.generateKnightMoves(piece, lsb);
             break;
           case ChessPieceType.BISHOP_VALUE:
             break;
@@ -152,6 +155,11 @@ public class ChessPosition {
     }
     
     this.movesGenerated = true;
+  }
+
+  public boolean kingAttacked() { // if true this position is illegal since you cannot move into check
+    long king = this.whiteTurn ? this.pieces.get(ChessPiece.BLACK_KING) : this.pieces.get(ChessPiece.WHITE_KING);
+    return (this.spacesAttacked & king) != 0;
   }
 
   public static int[] coordinatesFromLong(long l) {
@@ -197,6 +205,15 @@ public class ChessPosition {
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_QUEEN));
     } else {
       this.addMove(mv);
+    }
+  }
+
+  private void generateKnightMoves(int type, long p) {
+    for (long mv : KnightMoves.getKnightMoves(p)) {
+      if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
+        continue;
+      }
+      this.addMove(ChessMove.createChessMove(type, p, mv));
     }
   }
 
@@ -248,5 +265,21 @@ public class ChessPosition {
     this.children.put(mv, result);
     this.spacesAttacked |= mv.end();
     return result;
+  }
+
+  // Trims illegal moves that would put the king in check
+  public void trimCheckMoves() {
+    if (this.checkMovesTrimmed) {
+      return;
+    }
+    Iterator<Map.Entry<ChessMove, ChessPosition>> it = this.children.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<ChessMove, ChessPosition> entry = it.next();
+      entry.getValue().generateMoves();
+      if (entry.getValue().kingAttacked()) {
+        it.remove();
+      }
+    }
+    this.checkMovesTrimmed = true;
   }
 }

@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.0.9: Fixed en passant bug
+v0.0.10: Implemented knight moves
 
 ## Bugs
 
