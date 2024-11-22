@@ -33,7 +33,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
     this.node.setAlignment(Pos.CENTER);
     for (int r = 0; r < ChessPosition.BOARD_SIZE; r++) {
       for (int c = 0; c < ChessPosition.BOARD_SIZE; c++) {
-        this.spaces[r][c] = new ChessSpace(this, r, c);
+        this.spaces[r][c] = new ChessSpace(this, r, c, 7-r, c);
       }
     }
     this.node.setBackground(Background.fill(Color.GRAY));
@@ -63,7 +63,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
         ImageView imgV = new ImageView(img);
         Platform.runLater(new Runnable() {
           public void run() {
-            imgs[1][1] = imgV;
+            imgs[1][2] = imgV;
           }
         });
       } catch (Exception e) {
@@ -175,7 +175,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
     for (int p = 0; p < this.position.getMailbox().length; p++) {
       int r = p % 8;
       int c = p / 8;
-      this.spaces[r][c].setPiece(ChessPiece.fromInt(this.position.getMailbox()[p]));
+      this.spaces[r][c].setPiece(ChessPiece.fromInt((this.position.getMailbox()[p])));
     }
   }
 }

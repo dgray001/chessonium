@@ -5,13 +5,18 @@ import java.net.URISyntaxException;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import javafx.beans.binding.Bindings;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.Setter;
 import utilities.Logger;
@@ -24,6 +29,7 @@ public class ChessSpace implements Clickable {
   private ChessPiece piece;
   private int r;
   private int c;
+  private boolean lightSpace;
   @Setter
   private boolean hovered = false;
   @Setter
@@ -34,15 +40,40 @@ public class ChessSpace implements Clickable {
   private Node moveTargetImage;
   private ImageView pieceImage;
 
-  public ChessSpace(ChessBoard board, int r, int c) {
+  public ChessSpace(ChessBoard board, int r, int c, int r_draw, int c_draw) {
     this.board = board;
     this.r = r;
     this.c = c;
+    this.lightSpace = ((this.r + this.c) % 2) != 0;
     this.pane = new StackPane();
     this.refreshBackgroundColor();
     pane.prefWidthProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessPosition.BOARD_SIZE), board.getNode().heightProperty().divide(ChessPosition.BOARD_SIZE)));
     pane.prefHeightProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessPosition.BOARD_SIZE), board.getNode().heightProperty().divide(ChessPosition.BOARD_SIZE)));
-    board.getNode().add(pane, c, r);
+    board.getNode().add(pane, c_draw, r_draw);
+    if (r_draw == 7) {
+      Text t = new Text();
+      t.setFont(new Font("Montserrat", 12));
+      t.setText(Character.toString((char) ('A' + c)));
+      t.setFill(Color.web(this.lightSpace ? "#987455" : "#f0d9b5"));
+      t.setStyle("-fx-font-weight: bold");
+      VBox box = new VBox();
+      box.setAlignment(Pos.BOTTOM_LEFT);
+      box.setPadding(new Insets(0, 0, 0, 2));
+      box.getChildren().add(t);
+      pane.getChildren().add(box);
+    }
+    if (c_draw == 7) {
+      Text t = new Text();
+      t.setFont(new Font("Montserrat", 12));
+      t.setText(Integer.toString(r));
+      t.setFill(Color.web(this.lightSpace ? "#987455" : "#f0d9b5"));
+      t.setStyle("-fx-font-weight: bold");
+      VBox box = new VBox();
+      box.setAlignment(Pos.TOP_RIGHT);
+      box.setPadding(new Insets(0, 2, 0, 0));
+      box.getChildren().add(t);
+      pane.getChildren().add(box);
+    }
     Clickable.instantiate(this);
   }
 
@@ -114,12 +145,23 @@ public class ChessSpace implements Clickable {
     this.moveTarget = true;
     if (this.piece == null) {
       Circle circ = new Circle();
-      circ.setFill(Color.web(((this.r + this.c) % 2 == 0) ? "#646f41" : "#829769"));
+      circ.setFill(Color.web(this.lightSpace ? "#829769" : "#646f41"));
       circ.radiusProperty().bind(this.pane.widthProperty().multiply(0.15));
       this.moveTargetImage = circ;
       this.pane.getChildren().add(circ);
     } else {
-      // TODO: implement
+      // TODO: get img from image service which caches images
+      try {
+        String color = this.lightSpace ? "light" : "dark";
+        Image img = new Image(ClassLoader.getSystemClassLoader().getResource("images/attack_" + color + ".png").toURI().toString());
+        ImageView imgV = new ImageView(img);
+        imgV.fitHeightProperty().bind(this.pane.heightProperty());
+        imgV.fitWidthProperty().bind(this.pane.widthProperty());
+        this.moveTargetImage = imgV;
+        this.pane.getChildren().add(imgV);
+      } catch (Exception e) {
+        Logger.err(e.toString());
+      }
     }
   }
 
@@ -139,7 +181,7 @@ public class ChessSpace implements Clickable {
 
   private void refreshBackgroundColor() {
     if (this.hovered && this.moveTarget) {
-      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#847945" : "-fx-background-color:#adb17e");
+      this.pane.setStyle(this.lightSpace ? "-fx-background-color:#adb17e" : "-fx-background-color:#847945");
       if (this.moveTargetImage != null) {
         this.moveTargetImage.setVisible(false);
       }
@@ -148,9 +190,9 @@ public class ChessSpace implements Clickable {
         this.moveTargetImage.setVisible(true);
       }
       if (this.selected) {
-        this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646d40" : "-fx-background-color:#819669");
+        this.pane.setStyle(this.lightSpace ? "-fx-background-color:#819669" : "-fx-background-color:#646d40");
       } else {
-        this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
+        this.pane.setStyle(this.lightSpace ? "-fx-background-color:#f0d9b5" : "-fx-background-color:#b58863");
       }
     }
   }

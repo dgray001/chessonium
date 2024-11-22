@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.0.13: Implemented bishop rook and queen moves
+v0.0.14: Correctly draw board
 
 ## Bugs
 
