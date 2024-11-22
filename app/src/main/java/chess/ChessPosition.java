@@ -47,6 +47,7 @@ public class ChessPosition {
   @Getter
   private Map<ChessMove, ChessPosition> children;
   private boolean movesGenerated = false;
+  private long spacesAttacked;
 
   public static ChessPosition createPosition(ChessStartPosition startPosition) {
     ChessPosition position = new ChessPosition();
@@ -128,10 +129,11 @@ public class ChessPosition {
       return;
     }
     this.children = new HashMap<>();
+    this.spacesAttacked = 0;
     for (int piece : (this.whiteTurn ? ChessPiece.WHITE_ALL_PIECES : ChessPiece.BLACK_ALL_PIECES)) {
       long bitboard = this.pieces.get(piece);
       int pieceType = piece & 0xFFFF;
-      while (bitboard > 0) {
+      while (bitboard != 0) {
         long lsb = bitboard & -bitboard;
         switch(pieceType) {
           case ChessPieceType.PAWN_VALUE:
@@ -148,14 +150,20 @@ public class ChessPosition {
         bitboard &= ~lsb;
       }
     }
+    
     this.movesGenerated = true;
+  }
+
+  public static int[] coordinatesFromLong(long l) {
+    int i = Long.numberOfTrailingZeros(l);
+    return new int[]{(i%8), (i/8)};
   }
 
   private void generatePawnMoves(int type, long p) {
     long forward = this.whiteTurn ? (p << 1) : (p >>> 1);
     if ((this.allPieces & forward) == 0) { // no capture going forward
       this.addPawnMove(ChessMove.createChessMove(type, p, forward));
-      if ((ranks[this.whiteTurn ? 1 : 6] & p) > 0) { // check if pawn is on starting square
+      if ((ranks[this.whiteTurn ? 1 : 6] & p) != 0) { // check if pawn is on starting square
         long forward2 = this.whiteTurn ? (forward << 1) : (forward >>> 1);
         if ((this.allPieces & forward2) == 0) { // no capture going forward
           this.addPawnMove(ChessMove.createChessMove(type, p, forward2, forward));
@@ -163,25 +171,36 @@ public class ChessPosition {
       }
     }
     long attack1 = this.whiteTurn ? (p >>> 7) : (p << 7);
-    if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) > 0) { // must capture going diagonal
+    if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1));
-    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) > 0) && ((attack1 & this.enPassant) > 0)) { // en passant
+    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack1 & this.enPassant) != 0)) { // en passant
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1, false, true));
     }
     long attack2 = this.whiteTurn ? (p << 9) : (p >>> 9);
-    if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) > 0) { // must capture going diagonal
+    if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack2));
-    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) > 0) && ((attack2 & this.enPassant) > 0)) { // en passant
+    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack2 & this.enPassant) != 0)) { // en passant
       this.addPawnMove(ChessMove.createChessMove(type, p, attack2, false, true));
     }
   }
 
   private void addPawnMove(ChessMove mv) {
-    // check if it's a promotion move
-    this.applyMove(mv);
+    if (this.whiteTurn && (ranks[7] & mv.end()) != 0) {
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_KNIGHT));
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_BISHOP));
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_ROOK));
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_QUEEN));
+    } else if (!this.whiteTurn && (ranks[0] & mv.end()) != 0) {
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_KNIGHT));
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_BISHOP));
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_ROOK));
+      this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_QUEEN));
+    } else {
+      this.addMove(mv);
+    }
   }
 
-  private ChessPosition applyMove(ChessMove mv) {
+  private ChessPosition addMove(ChessMove mv) {
     ChessPosition result = new ChessPosition();
     result.pieces = new HashMap<>(this.pieces);
     result.allPieces = this.allPieces;
@@ -210,18 +229,24 @@ public class ChessPosition {
     }
     long bitboard = result.pieces.get(mv.piece());
     bitboard &= ~mv.start();
-    bitboard |= mv.end();
+    if (mv.promotionPiece() != 0) {
+      long promotionPieceBitboard = result.pieces.get(mv.promotionPiece());
+      promotionPieceBitboard |= mv.end();
+      result.pieces.put(mv.promotionPiece(), promotionPieceBitboard);
+    } else {
+      bitboard |= mv.end();
+    }
     result.pieces.put(mv.piece(), bitboard);
     int capturedPiece = result.mailbox[Long.numberOfTrailingZeros(captureSquare)];
-    if (capturedPiece > 0) {
+    if (capturedPiece != 0) {
       long capturedBitboard = result.pieces.get(capturedPiece);
       capturedBitboard &= ~captureSquare;
       result.pieces.put(capturedPiece, capturedBitboard);
     }
     result.mailbox[Long.numberOfTrailingZeros(mv.start())] = 0;
-    result.mailbox[Long.numberOfTrailingZeros(mv.end())] = mv.piece();
-    // special rules for casting and en passant
+    result.mailbox[Long.numberOfTrailingZeros(mv.end())] = mv.promotionPiece() != 0 ? mv.promotionPiece() : mv.piece();
     this.children.put(mv, result);
+    this.spacesAttacked |= mv.end();
     return result;
   }
 }

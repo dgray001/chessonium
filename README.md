@@ -1,4 +1,7 @@
 
 ### Chessonium
 
-v0.0.8: Can capture en passant
+v0.0.9: Fixed en passant bug
+
+## Bugs
+

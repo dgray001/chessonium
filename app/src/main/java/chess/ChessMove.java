@@ -6,18 +6,25 @@ public record ChessMove(
   long end,
   boolean castling,
   boolean isEnPassant,
-  long enPassant
+  long enPassant,
+  int promotionPiece
 ) {
   public static ChessMove createChessMove(int piece, long start, long end) {
-    return new ChessMove(piece, start, end, false, false, 0);
+    return new ChessMove(piece, start, end, false, false, 0, 0);
   }
   public static ChessMove createChessMove(int piece, long start, long end, boolean castling, boolean isEnPassant) {
-    return new ChessMove(piece, start, end, castling, isEnPassant, 0);
+    return new ChessMove(piece, start, end, castling, isEnPassant, 0, 0);
   }
   public static ChessMove createChessMove(int piece, long start, long end, long enPassant) {
-    return new ChessMove(piece, start, end, false, false, enPassant);
+    return new ChessMove(piece, start, end, false, false, enPassant, 0);
   }
-  public static ChessMove createChessMove(int piece, long start, long end, boolean castling, boolean isEnPassant, long enPassant) {
-    return new ChessMove(piece, start, end, castling, isEnPassant, enPassant);
+  public static ChessMove createChessMove(int piece, long start, long end, int promotionPiece) {
+    return new ChessMove(piece, start, end, false, false, 0, promotionPiece);
+  }
+  public static ChessMove createChessMove(int piece, long start, long end, boolean castling, boolean isEnPassant, long enPassant, int promotionPiece) {
+    return new ChessMove(piece, start, end, castling, isEnPassant, enPassant, promotionPiece);
+  }
+  public static ChessMove createChessMove(ChessMove mv, int promotionPiece) {
+    return new ChessMove(mv.piece(), mv.start(), mv.end(), mv.castling(), mv.isEnPassant(), mv.enPassant(), promotionPiece);
   }
 }
