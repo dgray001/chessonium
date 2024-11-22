@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import chess.moves.BishopMoves;
+import chess.moves.KingMoves;
+import chess.moves.KnightMoves;
+import chess.moves.QueenMoves;
+import chess.moves.RookMoves;
 import utilities.Bitwise;
 import utilities.Logger;
 
@@ -145,10 +150,13 @@ public class ChessPosition {
             this.generateKnightMoves(piece, lsb);
             break;
           case ChessPieceType.BISHOP_VALUE:
+            this.generateBishopMoves(piece, lsb);
             break;
           case ChessPieceType.ROOK_VALUE:
+            this.generateRookMoves(piece, lsb);
             break;
           case ChessPieceType.QUEEN_VALUE:
+            this.generateQueenMoves(piece, lsb);
             break;
           case ChessPieceType.KING_VALUE:
             this.generateKingMoves(piece, lsb);
@@ -221,6 +229,48 @@ public class ChessPosition {
         continue;
       }
       this.addMove(ChessMove.createChessMove(type, p, mv));
+    }
+  }
+
+  private void generateBishopMoves(int type, long p) {
+    for (Long[] dir : BishopMoves.getBishopMoves(p)) {
+      for (long mv : dir) {
+        if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
+          break;
+        }
+        this.addMove(ChessMove.createChessMove(type, p, mv));
+        if ((this.allPieces & mv) != 0) {
+          break;
+        }
+      }
+    }
+  }
+
+  private void generateRookMoves(int type, long p) {
+    for (Long[] dir : RookMoves.getRookMoves(p)) {
+      for (long mv : dir) {
+        if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
+          break;
+        }
+        this.addMove(ChessMove.createChessMove(type, p, mv));
+        if ((this.allPieces & mv) != 0) {
+          break;
+        }
+      }
+    }
+  }
+
+  private void generateQueenMoves(int type, long p) {
+    for (Long[] dir : QueenMoves.getQueenMoves(p)) {
+      for (long mv : dir) {
+        if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
+          break;
+        }
+        this.addMove(ChessMove.createChessMove(type, p, mv));
+        if ((this.allPieces & mv) != 0) {
+          break;
+        }
+      }
     }
   }
 

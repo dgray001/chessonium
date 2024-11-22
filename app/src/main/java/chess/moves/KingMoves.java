@@ -1,9 +1,12 @@
-package chess;
+package chess.moves;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import chess.ChessConstants;
+import chess.ChessPosition;
 
 public class KingMoves {
   private static KingMoves singleton = new KingMoves();

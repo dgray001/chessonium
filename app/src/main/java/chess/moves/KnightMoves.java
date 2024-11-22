@@ -1,12 +1,12 @@
-package chess;
+package chess.moves;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import utilities.Bitwise;
-import utilities.Logger;
+import chess.ChessConstants;
+import chess.ChessPosition;
 
 public class KnightMoves {
   private static KnightMoves singleton = new KnightMoves();
