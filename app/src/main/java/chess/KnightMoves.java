@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import utilities.Bitwise;
 import utilities.Logger;
 
 public class KnightMoves {

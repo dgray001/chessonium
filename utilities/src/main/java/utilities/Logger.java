@@ -11,7 +11,9 @@ public class Logger {
   public static String objectsToString(Object... objs) {
     StringBuilder s = new StringBuilder();
     for (Object o : objs) {
-      if (o.getClass().isArray()) {
+      if (o == null) {
+        s.append("null");
+      } else if (o.getClass().isArray()) {
         if (o instanceof Object[]) {
           s.append(arrayToString((Object[]) o));
         } else if (o instanceof int[]) {

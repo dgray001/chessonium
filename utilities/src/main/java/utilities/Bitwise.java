@@ -102,4 +102,18 @@ public class Bitwise {
     short s2 = (short) (i & 0xFFFF);
     return new short[]{s1, s2};
   }
+
+  public static String longToBinary(long l) {
+    return Bitwise.longToBinary(l, true);
+  }
+  public static String longToBinary(long l, boolean leadingZeros) {
+    StringBuilder s = new StringBuilder();
+    if (leadingZeros) {
+      for(int i = 0; i < Long.numberOfLeadingZeros((long)l); i++) {
+        s.append('0');
+      }
+    }
+    s.append(Long.toBinaryString((long)l));
+    return s.toString();
+  }
 }

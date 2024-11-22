@@ -139,11 +139,19 @@ public class ChessSpace implements Clickable {
 
   private void refreshBackgroundColor() {
     if (this.hovered && this.moveTarget) {
-      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646f41" : "-fx-background-color:#829769");
-    } else if (this.selected) {
-      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646d40" : "-fx-background-color:#819669");
+      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#847945" : "-fx-background-color:#adb17e");
+      if (this.moveTargetImage != null) {
+        this.moveTargetImage.setVisible(false);
+      }
     } else {
-      this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
+      if (this.moveTarget && this.moveTargetImage != null) {
+        this.moveTargetImage.setVisible(true);
+      }
+      if (this.selected) {
+        this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#646d40" : "-fx-background-color:#819669");
+      } else {
+        this.pane.setStyle(((this.r + this.c) % 2 == 0) ? "-fx-background-color:#b58863" : "-fx-background-color:#f0d9b5");
+      }
     }
   }
 }

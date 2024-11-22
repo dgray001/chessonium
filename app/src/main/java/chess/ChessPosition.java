@@ -146,6 +146,13 @@ public class ChessPosition {
             break;
           case ChessPieceType.BISHOP_VALUE:
             break;
+          case ChessPieceType.ROOK_VALUE:
+            break;
+          case ChessPieceType.QUEEN_VALUE:
+            break;
+          case ChessPieceType.KING_VALUE:
+            this.generateKingMoves(piece, lsb);
+            break;
           default:
             Logger.log("Move generation for piece type not implemented: " + ChessPieceType.values()[pieceType]);
             break;
@@ -210,6 +217,15 @@ public class ChessPosition {
 
   private void generateKnightMoves(int type, long p) {
     for (long mv : KnightMoves.getKnightMoves(p)) {
+      if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
+        continue;
+      }
+      this.addMove(ChessMove.createChessMove(type, p, mv));
+    }
+  }
+
+  private void generateKingMoves(int type, long p) {
+    for (long mv : KingMoves.getKingMoves(p)) {
       if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
         continue;
       }
