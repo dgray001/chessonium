@@ -35,7 +35,10 @@ public class ChessPiece {
   }
 
   public String imagePath() {
-    return this.type.toString() + "_" + (this.color ? "white" : "black");
+    return this.imagePath("medium");
+  }
+  public String imagePath(String size) {
+    return this.type.toString() + "_" + (this.color ? "white" : "black") + "_" + size;
   }
 
   @Override

@@ -1,6 +1,6 @@
 
 ### Chessonium
 
-v0.0.15: Castling
+v0.0.16: Images service
 
 ## Bugs

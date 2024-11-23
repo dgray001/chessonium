@@ -8,7 +8,6 @@ import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -19,7 +18,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.Setter;
-import utilities.Logger;
+import services.Images;
 
 public class ChessSpace implements Clickable {
   private ChessBoard board;
@@ -85,9 +84,7 @@ public class ChessSpace implements Clickable {
     if (this.piece == null) {
       return null;
     }
-    // TODO: get img from image service which caches images
-    Image img = new Image(ClassLoader.getSystemClassLoader().getResource("images/" + piece.imagePath() + "_medium.png").toURI().toString());
-    return new ImageView(img);
+    return new ImageView(Images.get(piece.imagePath()));
   }
 
   public void setPieceImage(ImageView pieceImage) {
@@ -150,18 +147,11 @@ public class ChessSpace implements Clickable {
       this.moveTargetImage = circ;
       this.pane.getChildren().add(circ);
     } else {
-      // TODO: get img from image service which caches images
-      try {
-        String color = this.lightSpace ? "light" : "dark";
-        Image img = new Image(ClassLoader.getSystemClassLoader().getResource("images/attack_" + color + ".png").toURI().toString());
-        ImageView imgV = new ImageView(img);
-        imgV.fitHeightProperty().bind(this.pane.heightProperty());
-        imgV.fitWidthProperty().bind(this.pane.widthProperty());
-        this.moveTargetImage = imgV;
-        this.pane.getChildren().add(imgV);
-      } catch (Exception e) {
-        Logger.err(e.toString());
-      }
+      ImageView imgV = new ImageView(Images.get("attack_" + (this.lightSpace ? "light" : "dark")));
+      imgV.fitHeightProperty().bind(this.pane.heightProperty());
+      imgV.fitWidthProperty().bind(this.pane.widthProperty());
+      this.moveTargetImage = imgV;
+      this.pane.getChildren().add(imgV);
     }
   }
 

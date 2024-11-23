@@ -7,7 +7,6 @@ import chess.ChessStartPosition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
@@ -57,26 +56,14 @@ public class ChessBoard extends FrontendElement implements Clickable {
 
   public void draw() {
     ImageView[][] imgs = new ImageView[8][8];
-    if (position == null) {
+    if (position != null) {
       try {
-        Image img = new Image(ClassLoader.getSystemClassLoader().getResource("images/bishop_white_medium.png").toURI().toString());
-        ImageView imgV = new ImageView(img);
-        Platform.runLater(new Runnable() {
-          public void run() {
-            imgs[1][2] = imgV;
+        // draw from existing images
+        for (int r = 0; r < spaces.length; r++) {
+          for (int c = 0; c < spaces[r].length; c++) {
+            imgs[r][c] = spaces[r][c].getPieceImage();
           }
-        });
-      } catch (Exception e) {
-        Logger.err(e.getMessage());
-      }
-    } else {
-      try {
-        // draw from existant images
-    for (int r = 0; r < spaces.length; r++) {
-      for (int c = 0; c < spaces[r].length; c++) {
-        imgs[r][c] = spaces[r][c].getPieceImage();
-      }
-    }
+        }
         // draw from mailbox
         /*for (int p = 0; p < this.position.getMailbox().length; p++) {
           ChessPiece piece = ChessPiece.fromInt(this.position.getMailbox()[p]);
