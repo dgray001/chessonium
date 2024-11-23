@@ -11,7 +11,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import utilities.Logger;
 
 public class Chessonium extends Application {
   private static final int FPS = 30;
@@ -43,10 +42,4 @@ public class Chessonium extends Application {
       }
     });
   }
-
-  public static void main(String[] args) {
-    Logger.log("Launching ...");
-    launch();
-  }
-
 }

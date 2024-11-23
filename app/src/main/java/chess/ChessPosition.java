@@ -33,6 +33,14 @@ public class ChessPosition {
     0x0101010101010101L << 7
   };
 
+  // position key set deterministically by this class
+  @Getter
+  private int key;
+  @Getter
+  private int depth;
+  @Getter
+  private String branch;
+  private static int nextKey = 1;
   // bitboard representation
   @Getter
   private Map<Integer, Long> pieces;
@@ -40,7 +48,7 @@ public class ChessPosition {
   private long allPieces = 0L;
   private long whitePieces = 0L;
   private long blackPieces = 0L;
-  // redundant mailbox representation only used for frontend
+  // redundant mailbox representation mostly used for frontend
   @Getter
   private int[] mailbox;
   // true if white's turn, false if black's turn
@@ -69,11 +77,18 @@ public class ChessPosition {
   private boolean movesGenerated = false;
   private boolean checkMovesTrimmed = false;
   private long spacesAttacked;
+  // the following are only used by the chess engine
+  @Getter
+  private float evaluation;
+  @Getter
+  private boolean evaluated = false;
 
   public static ChessPosition createPosition(ChessStartPosition startPosition) {
     ChessPosition position = new ChessPosition();
     position.pieces = new HashMap<Integer, Long>();
     position.mailbox = new int[BOARD_SIZE * BOARD_SIZE];
+    ChessPosition.setKey("", position);
+    position.depth = 0;
     switch(startPosition) {
       case STANDARD:
         position.setupPiecesStandard();
@@ -145,6 +160,11 @@ public class ChessPosition {
     this.mailbox[l] = pk;
   }
 
+  public void setEvaluation(float e) {
+    this.evaluation = e;
+    this.evaluated = true;
+  }
+
   public void generateMoves() {
     if (this.movesGenerated) {
       return;
@@ -197,7 +217,7 @@ public class ChessPosition {
     return new int[]{(i%8), (i/8)};
   }
 
-  private void generatePawnMoves(int type, long p) {
+  private synchronized void generatePawnMoves(int type, long p) {
     long forward = this.whiteTurn ? (p << 1) : (p >>> 1);
     if ((this.allPieces & forward) == 0) { // no capture going forward
       this.addPawnMove(ChessMove.createChessMove(type, p, forward));
@@ -388,11 +408,19 @@ public class ChessPosition {
     }
     result.mailbox[Long.numberOfTrailingZeros(mv.start())] = 0;
     result.mailbox[Long.numberOfTrailingZeros(mv.end())] = mv.promotionPiece() != 0 ? mv.promotionPiece() : mv.piece();
-    this.children.put(mv, result);
+    //ChessPosition.setKey(this.branch, result);
+    result.depth = this.depth + 1;
     if (mv.castling() == 0) {
       this.spacesAttacked |= mv.end();
     }
+    this.children.put(mv, result);
     return result;
+  }
+
+  private static synchronized void setKey(String parent, ChessPosition child) {
+    child.key = ChessPosition.nextKey;
+    child.branch = parent + Integer.toString(child.key);
+    ChessPosition.nextKey++;
   }
 
   private void movePieceNoCapture(int piece, long start, long end, boolean whiteTurn) {
@@ -414,8 +442,8 @@ public class ChessPosition {
   }
 
   // Trims illegal moves that would put the king in check
-  public void trimCheckMoves() {
-    if (this.checkMovesTrimmed) {
+  public synchronized void trimCheckMoves() {
+    if (this.checkMovesTrimmed || !this.movesGenerated) {
       return;
     }
     Iterator<Map.Entry<ChessMove, ChessPosition>> it = this.children.entrySet().iterator();

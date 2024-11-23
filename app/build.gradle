@@ -2,14 +2,18 @@ plugins {
   id 'buildlogic.java-application-conventions'
   id 'org.openjfx.javafxplugin' version '0.1.0'
   id 'io.freefair.lombok' version '8.11'
-}
-
-dependencies {
-  implementation(project(':utilities'))
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 repositories {
   mavenCentral()
+}
+
+dependencies {
+  implementation(project(':utilities'))
+  implementation 'org.openjfx:javafx-controls:21'
+  implementation 'org.openjfx:javafx-base:21'
+  implementation 'org.openjfx:javafx-graphics:21'
 }
 
 javafx {
@@ -17,4 +21,10 @@ javafx {
   modules = [ 'javafx.controls' ]
 }
 
-mainClassName = 'Chessonium'
+application {
+  mainClass = 'Main'
+}
+
+shadowJar {
+  mergeServiceFiles()
+}

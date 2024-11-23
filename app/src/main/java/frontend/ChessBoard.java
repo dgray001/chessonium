@@ -4,6 +4,7 @@ import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.ChessStartPosition;
+import engine.ChessEngine;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -17,6 +18,7 @@ import utilities.Logger;
 
 public class ChessBoard extends FrontendElement implements Clickable {
   private ChessPosition position;
+  private ChessEngine engine;
   private ChessSpace[][] spaces = new ChessSpace[ChessPosition.BOARD_SIZE][ChessPosition.BOARD_SIZE];
   @Getter
   private GridPane node;
@@ -113,6 +115,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
     }
     this.position = ChessPosition.createPosition(ChessStartPosition.STANDARD);
     this.propagatePosition();
+    this.engine = ChessEngine.create(this.position);
   }
 
   public void spaceSelected(int r, int c) {
@@ -147,6 +150,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
         continue;
       }
       this.position = this.position.getChildren().get(mv);
+      this.engine.playMove(mv);
       break;
     }
     this.propagatePosition();

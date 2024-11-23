@@ -1,6 +1,6 @@
 
 ### Chessonium
 
-v0.0.16: Images service
+v0.0.17: Can build into fat jar
 
 ## Bugs
