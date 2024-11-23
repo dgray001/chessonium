@@ -8,6 +8,13 @@ public class Logger {
     Logger.log(Logger.objectsToString(objs));
   }
 
+  public static void err(String msg) {
+    System.err.println(msg);
+  }
+  public static void err(Object... objs) {
+    Logger.err(Logger.objectsToString(objs));
+  }
+
   public static String objectsToString(Object... objs) {
     StringBuilder s = new StringBuilder();
     for (Object o : objs) {
@@ -92,9 +99,5 @@ public class Logger {
     }
     s.append("]");
     return s.toString();
-  }
-
-  public static void err(String msg) {
-    System.err.println(msg);
   }
 }

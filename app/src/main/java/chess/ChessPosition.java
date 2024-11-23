@@ -47,8 +47,22 @@ public class ChessPosition {
   private boolean whiteTurn;
   // bitwise representation of which space the current player's turn can attack en passant
   private long enPassant;
-  // bitwise representation of castling rights -> first bit is white castling kingside, then white castling queenside, etc...
+  // bitwise representation of castling rights -> white queenside, white kingside, black queenside, black kingside
   private byte castlingRights;
+  private static final byte CASTLING_WHITE_QUEENSIDE = 1;
+  private static final byte CASTLING_WHITE_KINGSIDE = 2;
+  private static final byte CASTLING_BLACK_QUEENSIDE = 4;
+  private static final byte CASTLING_BLACK_KINGSIDE = 8;
+  private static final byte CASTLING_WHITE = Bitwise.boolsToByte(new boolean[]{true, true});
+  private static final byte CASTLING_BLACK = Bitwise.boolsToByte(new boolean[]{false, false, true, true});
+  private static final long WHITE_QUEENSIDE_ROOK_START = 1L << coordinatesToByte(0, 0);
+  private static final long WHITE_KINGSIDE_ROOK_START = 1L << coordinatesToByte(0, 7);
+  private static final long BLACK_QUEENSIDE_ROOK_START = 1L << coordinatesToByte(7, 0);
+  private static final long BLACK_KINGSIDE_ROOK_START = 1L << coordinatesToByte(7, 7);
+  private static final long WHITE_QUEENSIDE_ROOK_END = 1L << coordinatesToByte(0, 3);
+  private static final long WHITE_KINGSIDE_ROOK_END = 1L << coordinatesToByte(0, 5);
+  private static final long BLACK_QUEENSIDE_ROOK_END = 1L << coordinatesToByte(7, 3);
+  private static final long BLACK_KINGSIDE_ROOK_END = 1L << coordinatesToByte(7, 5);
   // all valid child positions
   @Getter
   private Map<ChessMove, ChessPosition> children;
@@ -172,7 +186,8 @@ public class ChessPosition {
     this.movesGenerated = true;
   }
 
-  public boolean kingAttacked() { // if true this position is illegal since you cannot move into check
+  // if true this position is illegal since you cannot move into check
+  public boolean kingAttacked() {
     long king = this.whiteTurn ? this.pieces.get(ChessPiece.BLACK_KING) : this.pieces.get(ChessPiece.WHITE_KING);
     return (this.spacesAttacked & king) != 0;
   }
@@ -197,13 +212,13 @@ public class ChessPosition {
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1));
     } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack1 & this.enPassant) != 0)) { // en passant
-      this.addPawnMove(ChessMove.createChessMove(type, p, attack1, false, true));
+      this.addPawnMove(ChessMove.createChessMove(type, p, attack1, true));
     }
     long attack2 = this.whiteTurn ? (p << 9) : (p >>> 9);
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack2));
     } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack2 & this.enPassant) != 0)) { // en passant
-      this.addPawnMove(ChessMove.createChessMove(type, p, attack2, false, true));
+      this.addPawnMove(ChessMove.createChessMove(type, p, attack2, true));
     }
   }
 
@@ -281,6 +296,16 @@ public class ChessPosition {
       }
       this.addMove(ChessMove.createChessMove(type, p, mv));
     }
+    if ((this.castlingRights & (this.whiteTurn ? CASTLING_WHITE_QUEENSIDE : CASTLING_BLACK_QUEENSIDE)) != 0) {
+      if ( ((this.allPieces & (p >>> 8)) == 0) && ((this.allPieces & (p >>> 16)) == 0) && ((this.allPieces & (p >>> 24)) == 0) ) {
+        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, this.whiteTurn ? CASTLING_WHITE_QUEENSIDE : CASTLING_BLACK_QUEENSIDE));
+      }
+    }
+    if ((this.castlingRights & (this.whiteTurn ? CASTLING_WHITE_KINGSIDE : CASTLING_BLACK_KINGSIDE)) != 0) {
+      if ( ((this.allPieces & (p << 8)) == 0) && ((this.allPieces & (p << 16)) == 0) ) {
+        this.addMove(ChessMove.createChessMove(type, p, p << 16, this.whiteTurn ? CASTLING_WHITE_KINGSIDE : CASTLING_BLACK_KINGSIDE));
+      }
+    }
   }
 
   private ChessPosition addMove(ChessMove mv) {
@@ -292,7 +317,7 @@ public class ChessPosition {
     result.mailbox = Arrays.copyOf(mailbox, mailbox.length);
     result.whiteTurn = !this.whiteTurn;
     result.enPassant = mv.enPassant();
-    result.castlingRights = this.castlingRights; // TODO: implement
+    result.castlingRights = this.castlingRights;
     result.allPieces &= ~mv.start();
     result.allPieces |= mv.end();
     long captureSquare = mv.end();
@@ -300,6 +325,41 @@ public class ChessPosition {
       captureSquare = this.whiteTurn ? (captureSquare >>> 1) : (captureSquare << 1);
       result.allPieces &= ~captureSquare;
       result.mailbox[Long.numberOfTrailingZeros(captureSquare)] = 0;
+    } else if (mv.castling() > 0) {
+      result.castlingRights &= (this.whiteTurn ? CASTLING_BLACK : CASTLING_WHITE);
+      switch(mv.castling()) {
+        case CASTLING_WHITE_QUEENSIDE:
+          result.movePieceNoCapture(ChessPiece.WHITE_ROOK, WHITE_QUEENSIDE_ROOK_START, WHITE_QUEENSIDE_ROOK_END, true);
+          break;
+        case CASTLING_WHITE_KINGSIDE:
+          result.movePieceNoCapture(ChessPiece.WHITE_ROOK, WHITE_KINGSIDE_ROOK_START, WHITE_KINGSIDE_ROOK_END, true);
+          break;
+        case CASTLING_BLACK_QUEENSIDE:
+          result.movePieceNoCapture(ChessPiece.BLACK_ROOK, BLACK_QUEENSIDE_ROOK_START, BLACK_QUEENSIDE_ROOK_END, false);
+          break;
+        case CASTLING_BLACK_KINGSIDE:
+          result.movePieceNoCapture(ChessPiece.BLACK_ROOK, BLACK_KINGSIDE_ROOK_START, BLACK_KINGSIDE_ROOK_END, false);
+          break;
+        default:
+          Logger.err("Unknown castling location", mv.end());
+          break;
+      }
+    } else if (mv.piece() == ChessPiece.WHITE_KING) {
+      result.castlingRights &= CASTLING_BLACK;
+    } else if (mv.piece() == ChessPiece.BLACK_KING) {
+      result.castlingRights &= CASTLING_WHITE;
+    } else if (mv.piece() == ChessPiece.WHITE_ROOK) {
+      if (mv.start() == WHITE_QUEENSIDE_ROOK_START) {
+        result.castlingRights &= ~CASTLING_WHITE_QUEENSIDE;
+      } else if (mv.start() == WHITE_KINGSIDE_ROOK_START) {
+        result.castlingRights &= ~CASTLING_WHITE_KINGSIDE;
+      }
+    } else if (mv.piece() == ChessPiece.BLACK_ROOK) {
+      if (mv.start() == BLACK_QUEENSIDE_ROOK_START) {
+        result.castlingRights &= ~CASTLING_BLACK_QUEENSIDE;
+      } else if (mv.start() == BLACK_KINGSIDE_ROOK_START) {
+        result.castlingRights &= ~CASTLING_BLACK_KINGSIDE;
+      }
     }
     if (this.whiteTurn) {
       result.whitePieces &= ~mv.start();
@@ -329,8 +389,28 @@ public class ChessPosition {
     result.mailbox[Long.numberOfTrailingZeros(mv.start())] = 0;
     result.mailbox[Long.numberOfTrailingZeros(mv.end())] = mv.promotionPiece() != 0 ? mv.promotionPiece() : mv.piece();
     this.children.put(mv, result);
-    this.spacesAttacked |= mv.end();
+    if (mv.castling() == 0) {
+      this.spacesAttacked |= mv.end();
+    }
     return result;
+  }
+
+  private void movePieceNoCapture(int piece, long start, long end, boolean whiteTurn) {
+    long bb = this.pieces.get(piece);
+    bb &= ~start;
+    bb |= end;
+    this.pieces.put(piece, bb);
+    this.mailbox[Long.numberOfTrailingZeros(start)] = 0;
+    this.mailbox[Long.numberOfTrailingZeros(end)] = piece;
+    this.allPieces &= ~start;
+    this.allPieces |= end;
+    if (whiteTurn) {
+      this.whitePieces &= ~start;
+      this.whitePieces |= end;
+    } else {
+      this.blackPieces &= ~start;
+      this.blackPieces |= end;
+    }
   }
 
   // Trims illegal moves that would put the king in check
