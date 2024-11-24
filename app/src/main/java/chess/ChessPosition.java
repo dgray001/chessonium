@@ -37,8 +37,6 @@ public class ChessPosition {
   private int key;
   @Getter
   private int depth;
-  //@Getter
-  //private String branch;
   private static int nextKey = 1;
   // bitboard representation
   @Getter
@@ -94,6 +92,7 @@ public class ChessPosition {
   private Map<ChessMove, ChessPosition> children;
   private boolean movesGenerated = false;
   private boolean checkMovesTrimmed = false;
+  private long spacesEnemyAttacking;
   private long spacesAttacked;
   // the following are only used by the chess engine
   @Getter
@@ -301,6 +300,15 @@ public class ChessPosition {
     if (this.movesGenerated) {
       return;
     }
+    this.whiteTurn = !this.whiteTurn;
+    this._generateMoves();
+    this.spacesEnemyAttacking = this.spacesAttacked;
+    this.whiteTurn = !this.whiteTurn;
+    this._generateMoves();
+    this.movesGenerated = true;
+  }
+
+  private void _generateMoves() {
     this.children = new HashMap<>();
     this.spacesAttacked = 0;
     if (this.whiteTurn) {
@@ -378,13 +386,17 @@ public class ChessPosition {
         bb &= ~lsb;
       }
     }
-    this.movesGenerated = true;
   }
 
-  // if true this position is illegal since you cannot move into check
+  // if true this position is illegal since opponent cannot move into check
   public boolean kingAttacked() {
     long king = this.whiteTurn ? this.bKings : this.wKings;
     return (this.spacesAttacked & king) != 0;
+  }
+
+  public boolean inCheck() {
+    long king = this.whiteTurn ? this.wKings : this.bKings;
+    return (this.spacesEnemyAttacking & king) != 0;
   }
 
   public static int[] coordinatesFromLong(long l) {
@@ -404,12 +416,14 @@ public class ChessPosition {
       }
     }
     long attack1 = this.whiteTurn ? (p >>> 7) : (p << 7);
+    this.spacesAttacked |= attack1;
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1));
     } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack1 & this.enPassant) != 0)) { // en passant
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1, true));
     }
     long attack2 = this.whiteTurn ? (p << 9) : (p >>> 9);
+    this.spacesAttacked |= attack2;
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack2));
     } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack2 & this.enPassant) != 0)) { // en passant
@@ -435,6 +449,7 @@ public class ChessPosition {
 
   private void generateKnightMoves(byte type, long p) {
     for (long mv : KnightMoves.getKnightMoves(p)) {
+      this.spacesAttacked |= mv;
       if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
         continue;
       }
@@ -445,6 +460,7 @@ public class ChessPosition {
   private void generateBishopMoves(byte type, long p) {
     for (Long[] dir : BishopMoves.getBishopMoves(p)) {
       for (long mv : dir) {
+        this.spacesAttacked |= mv;
         if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
           break;
         }
@@ -459,6 +475,7 @@ public class ChessPosition {
   private void generateRookMoves(byte type, long p) {
     for (Long[] dir : RookMoves.getRookMoves(p)) {
       for (long mv : dir) {
+        this.spacesAttacked |= mv;
         if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
           break;
         }
@@ -473,6 +490,7 @@ public class ChessPosition {
   private void generateQueenMoves(byte type, long p) {
     for (Long[] dir : QueenMoves.getQueenMoves(p)) {
       for (long mv : dir) {
+        this.spacesAttacked |= mv;
         if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
           break;
         }
@@ -485,20 +503,63 @@ public class ChessPosition {
   }
 
   private void generateKingMoves(byte type, long p) {
-    for (long mv : KingMoves.getKingMoves(p)) {
-      if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
-        continue;
+    if (this.whiteTurn) {
+      for (long mv : KingMoves.getKingMoves(p)) {
+        this.spacesAttacked |= mv;
+        if ((this.whitePieces & mv) != 0) {
+          continue;
+        }
+        this.addMove(ChessMove.createChessMove(type, p, mv));
       }
-      this.addMove(ChessMove.createChessMove(type, p, mv));
-    }
-    if ((this.castlingRights & (this.whiteTurn ? CASTLING_WHITE_QUEENSIDE : CASTLING_BLACK_QUEENSIDE)) != 0) {
-      if ( ((this.allPieces & (p >>> 8)) == 0) && ((this.allPieces & (p >>> 16)) == 0) && ((this.allPieces & (p >>> 24)) == 0) ) {
-        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, this.whiteTurn ? CASTLING_WHITE_QUEENSIDE : CASTLING_BLACK_QUEENSIDE));
+      if ((this.spacesEnemyAttacking & p) != 0) {
+        return;
       }
-    }
-    if ((this.castlingRights & (this.whiteTurn ? CASTLING_WHITE_KINGSIDE : CASTLING_BLACK_KINGSIDE)) != 0) {
-      if ( ((this.allPieces & (p << 8)) == 0) && ((this.allPieces & (p << 16)) == 0) ) {
-        this.addMove(ChessMove.createChessMove(type, p, p << 16, this.whiteTurn ? CASTLING_WHITE_KINGSIDE : CASTLING_BLACK_KINGSIDE));
+      if (
+        ((this.castlingRights & CASTLING_WHITE_QUEENSIDE) != 0) &&
+        ((this.allPieces & (p >>> 8)) == 0) &&
+        ((this.allPieces & (p >>> 16)) == 0) &&
+        ((this.allPieces & (p >>> 24)) == 0) &&
+        (this.spacesEnemyAttacking & (p >>> 8)) == 0 &&
+        (this.spacesEnemyAttacking & (p >>> 16)) == 0
+      ) {
+        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, CASTLING_WHITE_QUEENSIDE, (byte) 0));
+      }
+      if (
+        ((this.castlingRights & CASTLING_WHITE_KINGSIDE) != 0) &&
+        ((this.allPieces & (p << 8)) == 0) &&
+        ((this.allPieces & (p << 16)) == 0) &&
+        (this.spacesEnemyAttacking & (p << 8)) == 0
+      ) {
+        this.addMove(ChessMove.createChessMove(type, p, p << 16, CASTLING_WHITE_KINGSIDE, (byte) 0));
+      }
+    } else {
+      for (long mv : KingMoves.getKingMoves(p)) {
+        this.spacesAttacked |= mv;
+        if ((this.blackPieces & mv) != 0) {
+          continue;
+        }
+        this.addMove(ChessMove.createChessMove(type, p, mv));
+      }
+      if ((this.spacesEnemyAttacking & p) != 0) {
+        return;
+      }
+      if (
+        ((this.castlingRights & CASTLING_BLACK_QUEENSIDE) != 0) &&
+        ((this.allPieces & (p >>> 8)) == 0) &&
+        ((this.allPieces & (p >>> 16)) == 0) &&
+        ((this.allPieces & (p >>> 24)) == 0) &&
+        (this.spacesEnemyAttacking & (p >>> 8)) == 0 &&
+        (this.spacesEnemyAttacking & (p >>> 16)) == 0
+      ) {
+        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, CASTLING_BLACK_QUEENSIDE, (byte) 0));
+      }
+      if (
+        ((this.castlingRights & CASTLING_BLACK_KINGSIDE) != 0) &&
+        ((this.allPieces & (p << 8)) == 0) &&
+        ((this.allPieces & (p << 16)) == 0) &&
+        (this.spacesEnemyAttacking & (p << 8)) == 0
+      ) {
+        this.addMove(ChessMove.createChessMove(type, p, p << 16, CASTLING_BLACK_KINGSIDE, (byte) 0));
       }
     }
   }
@@ -579,9 +640,6 @@ public class ChessPosition {
       }
     }
     result.depth = this.depth + 1;
-    if (mv.castling() == 0) {
-      this.spacesAttacked |= mv.end();
-    }
     this.children.put(mv, result);
     ChessPosition.setKey(result);
     return result;
@@ -589,7 +647,6 @@ public class ChessPosition {
 
   private static synchronized void setKey(ChessPosition child) {
     child.key = ChessPosition.nextKey;
-    //child.branch = parent + Integer.toString(child.key);
     ChessPosition.nextKey++;
   }
 

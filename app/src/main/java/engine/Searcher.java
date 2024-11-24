@@ -34,12 +34,12 @@ public class Searcher {
       if (pos == null) {
         return true;
       }
-      pos.generateMoves();
-      pos.trimCheckMoves();
       pos.setEvaluation(this.e.evaluate(pos));
       this.d = pos.getDepth() - this.p.getDepth();
       this.n++;
       if (this.d < limit) {
+        pos.generateMoves();
+        pos.trimCheckMoves();
         for (ChessPosition p : pos.getChildren().values()) {
           this.q.add(p);
         }

@@ -13,6 +13,7 @@ public class ChessEngine extends Thread {
   private boolean notified = false;
   private int moves = 1;
   private Searcher s = new Searcher();
+  private int maxDepth;
 
   public static ChessEngine create(ChessPosition position) {
     ChessEngine engine = new ChessEngine();
@@ -25,6 +26,7 @@ public class ChessEngine extends Thread {
       "vQueen", "9",
       "vKing", "1000"
     )));
+    engine.maxDepth = 2;
     engine.setDaemon(false);
     engine.start();
     return engine;
@@ -53,7 +55,7 @@ public class ChessEngine extends Thread {
         long ts = Instant.now().toEpochMilli();
         Logger.log("Starting", moves);
         while(!this.notified) {
-          if (this.s.search(1, 100)) {
+          if (this.s.search(this.maxDepth, 1000)) {
             break;
           }
           Logger.log("Calculating", this.s.getN(), rt.totalMemory() / (1024 * 1024) + " MB", rt.maxMemory() / (1024 * 1024) + " MB", rt.freeMemory() / (1024 * 1024) + " MB");

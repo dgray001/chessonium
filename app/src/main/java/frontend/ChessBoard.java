@@ -161,7 +161,6 @@ public class ChessBoard extends FrontendElement implements Clickable {
     if (this.position == null) {
       return;
     }
-    Logger.log("!! 0");
     this.position.generateMoves();
     this.position.trimCheckMoves();
     byte[] mailbox = this.position.getMailbox();

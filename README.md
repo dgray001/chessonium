@@ -1,6 +1,8 @@
 
 ### Chessonium
 
-v0.0.18: Some position optimizations
+v0.0.19: Fixed castling bugs
+
+## Plans
 
 ## Bugs
