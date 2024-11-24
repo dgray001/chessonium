@@ -1,6 +1,7 @@
 package engine;
 
 import java.time.Instant;
+import java.util.Map;
 
 import chess.ChessMove;
 import chess.ChessPosition;
@@ -16,7 +17,14 @@ public class ChessEngine extends Thread {
   public static ChessEngine create(ChessPosition position) {
     ChessEngine engine = new ChessEngine();
     engine.p = position;
-    engine.s.configure(position, new Evaluator_Equal());
+    engine.s.configure(position, Evaluator.create("material", Map.of(
+      "vPawn", "1",
+      "vKnight", "3",
+      "vBishop", "3",
+      "vRook", "5",
+      "vQueen", "9",
+      "vKing", "1000"
+    )));
     engine.setDaemon(false);
     engine.start();
     return engine;
@@ -37,6 +45,7 @@ public class ChessEngine extends Thread {
 
   public void run() {
     Logger.log("Chessonium engine starting ...");
+    Runtime rt = Runtime.getRuntime();
     try {
       while (true) {
         int moves = this.moves;
@@ -44,9 +53,10 @@ public class ChessEngine extends Thread {
         long ts = Instant.now().toEpochMilli();
         Logger.log("Starting", moves);
         while(!this.notified) {
-          if (this.s.search(2, 1000)) {
+          if (this.s.search(1, 100)) {
             break;
           }
+          Logger.log("Calculating", this.s.getN(), rt.totalMemory() / (1024 * 1024) + " MB", rt.maxMemory() / (1024 * 1024) + " MB", rt.freeMemory() / (1024 * 1024) + " MB");
         }
         synchronized (this.lock) {
           long t = Instant.now().toEpochMilli() - ts;

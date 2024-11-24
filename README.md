@@ -1,6 +1,6 @@
 
 ### Chessonium
 
-v0.0.17: Can build into fat jar
+v0.0.18: Some position optimizations
 
 ## Bugs

@@ -24,11 +24,11 @@ public class Searcher {
     this.q.clear();
     this.q.add(p);
     this.d = 0;
+    this.n = 0;
     // TODO: keep positions that are part of this position
   }
 
   boolean search(int limit, int amount) {
-    this.n = 0;
     while(amount > 0) {
       ChessPosition pos = this.q.poll();
       if (pos == null) {

@@ -23,6 +23,7 @@ javafx {
 
 application {
   mainClass = 'Main'
+  applicationDefaultJvmArgs = ['-Xms512m', '-Xmx1024m']
 }
 
 shadowJar {

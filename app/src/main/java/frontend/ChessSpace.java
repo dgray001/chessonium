@@ -19,6 +19,7 @@ import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.Setter;
 import services.Images;
+import utilities.Logger;
 
 public class ChessSpace implements Clickable {
   private ChessBoard board;

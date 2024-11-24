@@ -1,6 +1,5 @@
 package chess;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,19 +37,38 @@ public class ChessPosition {
   private int key;
   @Getter
   private int depth;
-  @Getter
-  private String branch;
+  //@Getter
+  //private String branch;
   private static int nextKey = 1;
   // bitboard representation
   @Getter
-  private Map<Integer, Long> pieces;
+  private long wPawns = 0L;
+  @Getter
+  private long wKnights = 0L;
+  @Getter
+  private long wBishops = 0L;
+  @Getter
+  private long wRooks = 0L;
+  @Getter
+  private long wQueens = 0L;
+  @Getter
+  private long wKings = 0L;
+  @Getter
+  private long bPawns = 0L;
+  @Getter
+  private long bKnights = 0L;
+  @Getter
+  private long bBishops = 0L;
+  @Getter
+  private long bRooks = 0L;
+  @Getter
+  private long bQueens = 0L;
+  @Getter
+  private long bKings = 0L;
   // redundant information for classes of pieces
   private long allPieces = 0L;
   private long whitePieces = 0L;
   private long blackPieces = 0L;
-  // redundant mailbox representation mostly used for frontend
-  @Getter
-  private int[] mailbox;
   // true if white's turn, false if black's turn
   private boolean whiteTurn;
   // bitwise representation of which space the current player's turn can attack en passant
@@ -85,9 +103,7 @@ public class ChessPosition {
 
   public static ChessPosition createPosition(ChessStartPosition startPosition) {
     ChessPosition position = new ChessPosition();
-    position.pieces = new HashMap<Integer, Long>();
-    position.mailbox = new int[BOARD_SIZE * BOARD_SIZE];
-    ChessPosition.setKey("", position);
+    ChessPosition.setKey(position);
     position.depth = 0;
     switch(startPosition) {
       case STANDARD:
@@ -102,6 +118,83 @@ public class ChessPosition {
 
   public static byte coordinatesToByte(int r, int c) {
     return (byte) (r + 8*c);
+  }
+
+  public byte[] getMailbox() {
+    byte[] mb = new byte[64];
+    long bb = this.wPawns;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.WHITE_PAWN;
+      bb &= ~lsb;
+    }
+    bb = this.wKnights;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.WHITE_KNIGHT;
+      bb &= ~lsb;
+    }
+    bb = this.wBishops;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.WHITE_BISHOP;
+      bb &= ~lsb;
+    }
+    bb = this.wRooks;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.WHITE_ROOK;
+      bb &= ~lsb;
+    }
+    bb = this.wQueens;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.WHITE_QUEEN;
+      bb &= ~lsb;
+    }
+    bb = this.wKings;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.WHITE_KING;
+      bb &= ~lsb;
+    }
+    bb = this.bPawns;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.BLACK_PAWN;
+      bb &= ~lsb;
+    }
+    bb = this.bKnights;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.BLACK_KNIGHT;
+      bb &= ~lsb;
+    }
+    bb = this.bBishops;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.BLACK_BISHOP;
+      bb &= ~lsb;
+    }
+    bb = this.bRooks;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.BLACK_ROOK;
+      bb &= ~lsb;
+    }
+    bb = this.bQueens;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.BLACK_QUEEN;
+      bb &= ~lsb;
+    }
+    bb = this.bKings;
+    while (bb != 0) {
+      long lsb = bb & -bb;
+      mb[Long.numberOfTrailingZeros(lsb)] = ChessPiece.BLACK_KING;
+      bb &= ~lsb;
+    }
+    return mb;
   }
 
   private void setupPiecesStandard() {
@@ -143,21 +236,60 @@ public class ChessPosition {
   }
 
   private void setPiece(ChessPieceType type, boolean whitePiece, int r, int c) {
-    ChessPiece p = new ChessPiece(type, whitePiece);
-    Integer pk = p.hashCode();
-    if (!pieces.containsKey(pk)) {
-      pieces.put(pk, (long) 0);
-    }
     byte l = coordinatesToByte(r, c);
     long posK = 1L << l;
-    this.pieces.put(pk, this.pieces.get(pk) | posK);
+    switch(type) {
+      case PAWN:
+        if (whitePiece) {
+          this.wPawns |= posK;
+        } else {
+          this.bPawns |= posK;
+        }
+        break;
+      case KNIGHT:
+        if (whitePiece) {
+          this.wKnights |= posK;
+        } else {
+          this.bKnights |= posK;
+        }
+        break;
+      case BISHOP:
+        if (whitePiece) {
+          this.wBishops |= posK;
+        } else {
+          this.bBishops |= posK;
+        }
+        break;
+      case ROOK:
+        if (whitePiece) {
+          this.wRooks |= posK;
+        } else {
+          this.bRooks |= posK;
+        }
+        break;
+      case QUEEN:
+        if (whitePiece) {
+          this.wQueens |= posK;
+        } else {
+          this.bQueens |= posK;
+        }
+        break;
+      case KING:
+        if (whitePiece) {
+          this.wKings |= posK;
+        } else {
+          this.bKings |= posK;
+        }
+        break;
+      default:
+        break;
+    }
     this.allPieces |= posK;
     if (whitePiece) {
       this.whitePieces |= posK;
     } else {
       this.blackPieces |= posK;
     }
-    this.mailbox[l] = pk;
   }
 
   public void setEvaluation(float e) {
@@ -171,44 +303,87 @@ public class ChessPosition {
     }
     this.children = new HashMap<>();
     this.spacesAttacked = 0;
-    for (int piece : (this.whiteTurn ? ChessPiece.WHITE_ALL_PIECES : ChessPiece.BLACK_ALL_PIECES)) {
-      long bitboard = this.pieces.get(piece);
-      int pieceType = piece & 0xFFFF;
-      while (bitboard != 0) {
-        long lsb = bitboard & -bitboard;
-        switch(pieceType) {
-          case ChessPieceType.PAWN_VALUE:
-            this.generatePawnMoves(piece, lsb);
-            break;
-          case ChessPieceType.KNIGHT_VALUE:
-            this.generateKnightMoves(piece, lsb);
-            break;
-          case ChessPieceType.BISHOP_VALUE:
-            this.generateBishopMoves(piece, lsb);
-            break;
-          case ChessPieceType.ROOK_VALUE:
-            this.generateRookMoves(piece, lsb);
-            break;
-          case ChessPieceType.QUEEN_VALUE:
-            this.generateQueenMoves(piece, lsb);
-            break;
-          case ChessPieceType.KING_VALUE:
-            this.generateKingMoves(piece, lsb);
-            break;
-          default:
-            Logger.log("Move generation for piece type not implemented: " + ChessPieceType.values()[pieceType]);
-            break;
-        }
-        bitboard &= ~lsb;
+    if (this.whiteTurn) {
+      long bb = this.wPawns;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generatePawnMoves(ChessPiece.WHITE_PAWN, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.wKnights;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateKnightMoves(ChessPiece.WHITE_KNIGHT, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.wBishops;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateBishopMoves(ChessPiece.WHITE_BISHOP, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.wRooks;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateRookMoves(ChessPiece.WHITE_ROOK, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.wQueens;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateQueenMoves(ChessPiece.WHITE_QUEEN, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.wKings;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateKingMoves(ChessPiece.WHITE_KING, lsb);
+        bb &= ~lsb;
+      }
+    } else {
+      long bb = this.bPawns;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generatePawnMoves(ChessPiece.BLACK_PAWN, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.bKnights;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateKnightMoves(ChessPiece.BLACK_KNIGHT, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.bBishops;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateBishopMoves(ChessPiece.BLACK_BISHOP, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.bRooks;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateRookMoves(ChessPiece.BLACK_ROOK, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.bQueens;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateQueenMoves(ChessPiece.BLACK_QUEEN, lsb);
+        bb &= ~lsb;
+      }
+      bb = this.bKings;
+      while (bb != 0) {
+        long lsb = bb & -bb;
+        this.generateKingMoves(ChessPiece.BLACK_KING, lsb);
+        bb &= ~lsb;
       }
     }
-    
     this.movesGenerated = true;
   }
 
   // if true this position is illegal since you cannot move into check
   public boolean kingAttacked() {
-    long king = this.whiteTurn ? this.pieces.get(ChessPiece.BLACK_KING) : this.pieces.get(ChessPiece.WHITE_KING);
+    long king = this.whiteTurn ? this.bKings : this.wKings;
     return (this.spacesAttacked & king) != 0;
   }
 
@@ -217,7 +392,7 @@ public class ChessPosition {
     return new int[]{(i%8), (i/8)};
   }
 
-  private synchronized void generatePawnMoves(int type, long p) {
+  private synchronized void generatePawnMoves(byte type, long p) {
     long forward = this.whiteTurn ? (p << 1) : (p >>> 1);
     if ((this.allPieces & forward) == 0) { // no capture going forward
       this.addPawnMove(ChessMove.createChessMove(type, p, forward));
@@ -258,7 +433,7 @@ public class ChessPosition {
     }
   }
 
-  private void generateKnightMoves(int type, long p) {
+  private void generateKnightMoves(byte type, long p) {
     for (long mv : KnightMoves.getKnightMoves(p)) {
       if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
         continue;
@@ -267,7 +442,7 @@ public class ChessPosition {
     }
   }
 
-  private void generateBishopMoves(int type, long p) {
+  private void generateBishopMoves(byte type, long p) {
     for (Long[] dir : BishopMoves.getBishopMoves(p)) {
       for (long mv : dir) {
         if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
@@ -281,7 +456,7 @@ public class ChessPosition {
     }
   }
 
-  private void generateRookMoves(int type, long p) {
+  private void generateRookMoves(byte type, long p) {
     for (Long[] dir : RookMoves.getRookMoves(p)) {
       for (long mv : dir) {
         if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
@@ -295,7 +470,7 @@ public class ChessPosition {
     }
   }
 
-  private void generateQueenMoves(int type, long p) {
+  private void generateQueenMoves(byte type, long p) {
     for (Long[] dir : QueenMoves.getQueenMoves(p)) {
       for (long mv : dir) {
         if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
@@ -309,7 +484,7 @@ public class ChessPosition {
     }
   }
 
-  private void generateKingMoves(int type, long p) {
+  private void generateKingMoves(byte type, long p) {
     for (long mv : KingMoves.getKingMoves(p)) {
       if (((this.whiteTurn ? this.whitePieces : this.blackPieces) & mv) != 0) {
         continue;
@@ -330,35 +505,42 @@ public class ChessPosition {
 
   private ChessPosition addMove(ChessMove mv) {
     ChessPosition result = new ChessPosition();
-    result.pieces = new HashMap<>(this.pieces);
+    result.wPawns = this.wPawns;
+    result.wKnights = this.wKnights;
+    result.wBishops = this.wBishops;
+    result.wRooks = this.wRooks;
+    result.wQueens = this.wQueens;
+    result.wKings = this.wKings;
+    result.bPawns = this.bPawns;
+    result.bKnights = this.bKnights;
+    result.bBishops = this.bBishops;
+    result.bRooks = this.bRooks;
+    result.bQueens = this.bQueens;
+    result.bKings = this.bKings;
     result.allPieces = this.allPieces;
     result.whitePieces = this.whitePieces;
     result.blackPieces = this.blackPieces;
-    result.mailbox = Arrays.copyOf(mailbox, mailbox.length);
     result.whiteTurn = !this.whiteTurn;
     result.enPassant = mv.enPassant();
     result.castlingRights = this.castlingRights;
-    result.allPieces &= ~mv.start();
-    result.allPieces |= mv.end();
     long captureSquare = mv.end();
     if (mv.isEnPassant()) {
       captureSquare = this.whiteTurn ? (captureSquare >>> 1) : (captureSquare << 1);
       result.allPieces &= ~captureSquare;
-      result.mailbox[Long.numberOfTrailingZeros(captureSquare)] = 0;
     } else if (mv.castling() > 0) {
       result.castlingRights &= (this.whiteTurn ? CASTLING_BLACK : CASTLING_WHITE);
       switch(mv.castling()) {
         case CASTLING_WHITE_QUEENSIDE:
-          result.movePieceNoCapture(ChessPiece.WHITE_ROOK, WHITE_QUEENSIDE_ROOK_START, WHITE_QUEENSIDE_ROOK_END, true);
+          result.moveWhitePiece(ChessPiece.WHITE_ROOK, WHITE_QUEENSIDE_ROOK_START, WHITE_QUEENSIDE_ROOK_END);
           break;
         case CASTLING_WHITE_KINGSIDE:
-          result.movePieceNoCapture(ChessPiece.WHITE_ROOK, WHITE_KINGSIDE_ROOK_START, WHITE_KINGSIDE_ROOK_END, true);
+          result.moveWhitePiece(ChessPiece.WHITE_ROOK, WHITE_KINGSIDE_ROOK_START, WHITE_KINGSIDE_ROOK_END);
           break;
         case CASTLING_BLACK_QUEENSIDE:
-          result.movePieceNoCapture(ChessPiece.BLACK_ROOK, BLACK_QUEENSIDE_ROOK_START, BLACK_QUEENSIDE_ROOK_END, false);
+          result.moveBlackPiece(ChessPiece.BLACK_ROOK, BLACK_QUEENSIDE_ROOK_START, BLACK_QUEENSIDE_ROOK_END);
           break;
         case CASTLING_BLACK_KINGSIDE:
-          result.movePieceNoCapture(ChessPiece.BLACK_ROOK, BLACK_KINGSIDE_ROOK_START, BLACK_KINGSIDE_ROOK_END, false);
+          result.moveBlackPiece(ChessPiece.BLACK_ROOK, BLACK_KINGSIDE_ROOK_START, BLACK_KINGSIDE_ROOK_END);
           break;
         default:
           Logger.err("Unknown castling location", mv.end());
@@ -382,63 +564,213 @@ public class ChessPosition {
       }
     }
     if (this.whiteTurn) {
-      result.whitePieces &= ~mv.start();
-      result.whitePieces |= mv.end();
-      result.blackPieces &= ~captureSquare;
+      result.captureBlackPiece(captureSquare);
+      if (mv.promotionPiece() == 0) {
+        result.moveWhitePiece(mv.piece(), mv.start(), mv.end());
+      } else {
+        result.moveAndPromoteWhitePiece(mv.piece(), mv.start(), mv.end(), mv.promotionPiece());
+      }
     } else {
-      result.blackPieces &= ~mv.start();
-      result.blackPieces |= mv.end();
-      result.whitePieces &= ~captureSquare;
+      result.captureWhitePiece(captureSquare);
+      if (mv.promotionPiece() == 0) {
+        result.moveBlackPiece(mv.piece(), mv.start(), mv.end());
+      } else {
+        result.moveAndPromoteBlackPiece(mv.piece(), mv.start(), mv.end(), mv.promotionPiece());
+      }
     }
-    long bitboard = result.pieces.get(mv.piece());
-    bitboard &= ~mv.start();
-    if (mv.promotionPiece() != 0) {
-      long promotionPieceBitboard = result.pieces.get(mv.promotionPiece());
-      promotionPieceBitboard |= mv.end();
-      result.pieces.put(mv.promotionPiece(), promotionPieceBitboard);
-    } else {
-      bitboard |= mv.end();
-    }
-    result.pieces.put(mv.piece(), bitboard);
-    int capturedPiece = result.mailbox[Long.numberOfTrailingZeros(captureSquare)];
-    if (capturedPiece != 0) {
-      long capturedBitboard = result.pieces.get(capturedPiece);
-      capturedBitboard &= ~captureSquare;
-      result.pieces.put(capturedPiece, capturedBitboard);
-    }
-    result.mailbox[Long.numberOfTrailingZeros(mv.start())] = 0;
-    result.mailbox[Long.numberOfTrailingZeros(mv.end())] = mv.promotionPiece() != 0 ? mv.promotionPiece() : mv.piece();
-    //ChessPosition.setKey(this.branch, result);
     result.depth = this.depth + 1;
     if (mv.castling() == 0) {
       this.spacesAttacked |= mv.end();
     }
     this.children.put(mv, result);
+    ChessPosition.setKey(result);
     return result;
   }
 
-  private static synchronized void setKey(String parent, ChessPosition child) {
+  private static synchronized void setKey(ChessPosition child) {
     child.key = ChessPosition.nextKey;
-    child.branch = parent + Integer.toString(child.key);
+    //child.branch = parent + Integer.toString(child.key);
     ChessPosition.nextKey++;
   }
 
-  private void movePieceNoCapture(int piece, long start, long end, boolean whiteTurn) {
-    long bb = this.pieces.get(piece);
-    bb &= ~start;
-    bb |= end;
-    this.pieces.put(piece, bb);
-    this.mailbox[Long.numberOfTrailingZeros(start)] = 0;
-    this.mailbox[Long.numberOfTrailingZeros(end)] = piece;
+  private void moveWhitePiece(byte piece, long start, long end) {
     this.allPieces &= ~start;
     this.allPieces |= end;
-    if (whiteTurn) {
-      this.whitePieces &= ~start;
-      this.whitePieces |= end;
-    } else {
-      this.blackPieces &= ~start;
-      this.blackPieces |= end;
+    this.whitePieces &= ~start;
+    this.whitePieces |= end;
+    switch(piece) {
+      case ChessPiece.WHITE_PAWN:
+        this.wPawns &= ~start;
+        this.wPawns |= end;
+        break;
+      case ChessPiece.WHITE_KNIGHT:
+        this.wKnights &= ~start;
+        this.wKnights |= end;
+        break;
+      case ChessPiece.WHITE_BISHOP:
+        this.wBishops &= ~start;
+        this.wBishops |= end;
+        break;
+      case ChessPiece.WHITE_ROOK:
+        this.wRooks &= ~start;
+        this.wRooks |= end;
+        break;
+      case ChessPiece.WHITE_QUEEN:
+        this.wQueens &= ~start;
+        this.wQueens |= end;
+        break;
+      case ChessPiece.WHITE_KING:
+        this.wKings &= ~start;
+        this.wKings |= end;
+        break;
     }
+  }
+
+  private void moveAndPromoteWhitePiece(byte piece, long start, long end, byte promotionPiece) {
+    this.allPieces &= ~start;
+    this.allPieces |= end;
+    this.whitePieces &= ~start;
+    this.whitePieces |= end;
+    switch(piece) {
+      case ChessPiece.WHITE_PAWN:
+        this.wPawns &= ~start;
+        break;
+      case ChessPiece.WHITE_KNIGHT:
+        this.wKnights &= ~start;
+        break;
+      case ChessPiece.WHITE_BISHOP:
+        this.wBishops &= ~start;
+        break;
+      case ChessPiece.WHITE_ROOK:
+        this.wRooks &= ~start;
+        break;
+      case ChessPiece.WHITE_QUEEN:
+        this.wQueens &= ~start;
+        break;
+      case ChessPiece.WHITE_KING:
+        this.wKings &= ~start;
+        break;
+    }
+    switch(promotionPiece) {
+      case ChessPiece.WHITE_PAWN:
+        this.wPawns &= ~end;
+        break;
+      case ChessPiece.WHITE_KNIGHT:
+        this.wKnights &= ~end;
+        break;
+      case ChessPiece.WHITE_BISHOP:
+        this.wBishops &= ~end;
+        break;
+      case ChessPiece.WHITE_ROOK:
+        this.wRooks &= ~end;
+        break;
+      case ChessPiece.WHITE_QUEEN:
+        this.wQueens &= ~end;
+        break;
+      case ChessPiece.WHITE_KING:
+        this.wKings &= ~end;
+        break;
+    }
+  }
+
+  private void moveBlackPiece(byte piece, long start, long end) {
+    this.allPieces &= ~start;
+    this.allPieces |= end;
+    this.blackPieces &= ~start;
+    this.blackPieces |= end;
+    switch(piece) {
+      case ChessPiece.BLACK_PAWN:
+        this.bPawns &= ~start;
+        this.bPawns |= end;
+        break;
+      case ChessPiece.BLACK_KNIGHT:
+        this.bKnights &= ~start;
+        this.bKnights |= end;
+        break;
+      case ChessPiece.BLACK_BISHOP:
+        this.bBishops &= ~start;
+        this.bBishops |= end;
+        break;
+      case ChessPiece.BLACK_ROOK:
+        this.bRooks &= ~start;
+        this.bRooks |= end;
+        break;
+      case ChessPiece.BLACK_QUEEN:
+        this.bQueens &= ~start;
+        this.bQueens |= end;
+        break;
+      case ChessPiece.BLACK_KING:
+        this.bKings &= ~start;
+        this.bKings |= end;
+        break;
+    }
+  }
+
+  private void moveAndPromoteBlackPiece(byte piece, long start, long end, byte promotionPiece) {
+    this.allPieces &= ~start;
+    this.allPieces |= end;
+    this.blackPieces &= ~start;
+    this.blackPieces |= end;
+    switch(piece) {
+      case ChessPiece.BLACK_PAWN:
+        this.bPawns &= ~start;
+        break;
+      case ChessPiece.BLACK_KNIGHT:
+        this.bKnights &= ~start;
+        break;
+      case ChessPiece.BLACK_BISHOP:
+        this.bBishops &= ~start;
+        break;
+      case ChessPiece.BLACK_ROOK:
+        this.bRooks &= ~start;
+        break;
+      case ChessPiece.BLACK_QUEEN:
+        this.bQueens &= ~start;
+        break;
+      case ChessPiece.BLACK_KING:
+        this.bKings &= ~start;
+        break;
+    }
+    switch(promotionPiece) {
+      case ChessPiece.BLACK_PAWN:
+        this.bPawns |= end;
+        break;
+      case ChessPiece.BLACK_KNIGHT:
+        this.bKnights |= end;
+        break;
+      case ChessPiece.BLACK_BISHOP:
+        this.bBishops |= end;
+        break;
+      case ChessPiece.BLACK_ROOK:
+        this.bRooks |= end;
+        break;
+      case ChessPiece.BLACK_QUEEN:
+        this.bQueens |= end;
+        break;
+      case ChessPiece.BLACK_KING:
+        this.bKings |= end;
+        break;
+    }
+  }
+
+  private void captureWhitePiece(long captureSquare) {
+    this.whitePieces &= ~captureSquare;
+    this.wPawns &= ~captureSquare;
+    this.wKnights &= ~captureSquare;
+    this.wBishops &= ~captureSquare;
+    this.wRooks &= ~captureSquare;
+    this.wQueens &= ~captureSquare;
+    this.wKings &= ~captureSquare;
+  }
+
+  private void captureBlackPiece(long captureSquare) {
+    this.blackPieces &= ~captureSquare;
+    this.bPawns &= ~captureSquare;
+    this.bKnights &= ~captureSquare;
+    this.bBishops &= ~captureSquare;
+    this.bRooks &= ~captureSquare;
+    this.bQueens &= ~captureSquare;
+    this.bKings &= ~captureSquare;
   }
 
   // Trims illegal moves that would put the king in check
