@@ -19,9 +19,9 @@ public class ChessPosition {
   public static final int BOARD_SIZE = 8;
 
   // files are columns
-  private static long[] files = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
+  public static long[] files = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
   // files are rows
-  private static long[] ranks = new long[]{
+  public static long[] ranks = new long[]{
     0x0101010101010101L,// every 8th bit is 1, starting with the first bit
     0x0101010101010101L << 1,
     0x0101010101010101L << 2,

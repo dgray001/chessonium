@@ -12,7 +12,7 @@ public interface Evaluator {
   }
   public static Evaluator create(String evaluatorName, Map<String, String> config) {
     Evaluator evaluator;
-    switch(evaluatorName.toLowerCase()) {
+    switch(evaluatorName.toLowerCase().trim()) {
       case "equal":
         evaluator = new Evaluator_Equal();
         break;
@@ -29,7 +29,7 @@ public interface Evaluator {
 
   default void setConfig(Map<String, String> config) {
     for (Map.Entry<String, String> entry : config.entrySet()) {
-      this._setConfig(entry.getKey(), entry.getValue());
+      this._setConfig(entry.getKey().trim(), entry.getValue().trim());
     }
   }
 

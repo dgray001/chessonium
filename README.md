@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.1.0: Basic minimax material engine
+v0.1.1: Configurable negamax implementation
 
 ## Plans
 

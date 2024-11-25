@@ -14,20 +14,25 @@ public class ChessEngine extends Thread {
   private MutableBoolean notified = new MutableBoolean(false);
   private int moves = 1;
   private Searcher s = new Searcher();
-  private int maxDepth;
 
   public static ChessEngine create(ChessPosition position) {
     ChessEngine engine = new ChessEngine();
     engine.p = position;
-    engine.s.configure(position, Evaluator.create("material", Map.of(
-      "vPawn", "1",
-      "vKnight", "3",
-      "vBishop", "3",
-      "vRook", "5",
-      "vQueen", "9",
-      "vKing", "1000"
+    engine.s.configure(position, ChessEngineConfiguration.of(Map.of(
+      "depth", "10",
+      "quiescenceDepth", "6",
+      "searcherType", "negamax",
+      "evaluators", Map.of(
+        "material", Map.of(
+          "vPawn", "1",
+          "vKnight", "3",
+          "vBishop", "3",
+          "vRook", "5",
+          "vQueen", "9",
+          "vKing", "1000"
+        )
+      )
     )));
-    engine.maxDepth = 10;
     engine.setDaemon(false);
     engine.start();
     return engine;
@@ -54,7 +59,7 @@ public class ChessEngine extends Thread {
         this.s.setPosition(this.p);
         long ts = Instant.now().toEpochMilli();
         Logger.log("Starting move: " + moves);
-        this.s.search(this.maxDepth, this.notified);
+        this.s.search(this.notified);
         synchronized (this.lock) {
           long t = Instant.now().toEpochMilli() - ts;
           Logger.log("Finished move " + moves, this.s.getN(), t, 0.01 * Math.round(100 * (this.s.getN() / ((float)t))) + " kn/s");
