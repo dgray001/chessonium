@@ -53,6 +53,15 @@ public interface Evaluator {
     return 0;
   }
 
+  public static boolean configBool(String v) {
+    try {
+      return Boolean.parseBoolean(v);
+    } catch(Exception e) {
+      Logger.err("Error converting config value to boolean", e);
+    }
+    return false;
+  }
+
   default float evaluate(ChessPosition p) {
     if (p.isEvaluated()) {
       return p.getEvaluation();

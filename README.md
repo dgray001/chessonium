@@ -1,12 +1,12 @@
 
 ### Chessonium
 
-v0.1.1: Configurable negamax implementation
+v0.1.2: Alpha beta pruning for minimax
 
 ## Plans
 
 0.2:
-Configure search to use minimax, negamax, or ab (can we do ab with negamax?)
+Configure search to use ab
 Create evaluator for piece activity (lookup table) configured with parameter
 Create evaluator for pawn structure cases (one evaluator for each case => doubled pawns, isolated pawns, passed pawns, etc...)
 Allow for multiple evaluators in evaluator

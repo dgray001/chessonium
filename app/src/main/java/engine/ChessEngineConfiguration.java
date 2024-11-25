@@ -19,6 +19,9 @@ public class ChessEngineConfiguration {
   // which search function to use
   @Getter
   private SearcherType searcherType = SearcherType.MINIMAX;
+  // whether the search function should implement alpha beta pruning
+  @Getter
+  private boolean abPruning = false;
 
   // TODO: add configurable ab pruning
   // TODO: add definitions for what quiescence can mean
@@ -30,6 +33,7 @@ public class ChessEngineConfiguration {
     sb.append("Depth: " + this.depth);
     sb.append("\nQuiescence Depth: " + this.quiescenceDepth);
     sb.append("\nSearcher Type: " + this.searcherType.name().toLowerCase());
+    sb.append("\nAlpha-Beta Pruning: " + this.abPruning);
     sb.append("\nEvaluators:");
     for (Map.Entry<String, Map<String, String>> entry : this.evaluators.entrySet()) {
       sb.append("\n  " + entry.getKey() + ":");
@@ -59,6 +63,9 @@ public class ChessEngineConfiguration {
             } else {
               config.searcherType = SearcherType.MINIMAX;
             }
+            break;
+          case "abPruning":
+            config.abPruning = Evaluator.configBool(v);
             break;
           case "evaluators":
             config.evaluators = (Map<String, Map<String, String>>) entry.getValue();

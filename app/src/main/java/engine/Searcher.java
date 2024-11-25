@@ -18,6 +18,7 @@ public class Searcher {
   private int depthLimit;
   private int quiescenceDepth;
   private SearcherType searcherType;
+  private boolean abPruning;
   @Getter
   private int n = 0;
   @Getter
@@ -30,6 +31,7 @@ public class Searcher {
     this.depthLimit = config.getDepth();
     this.quiescenceDepth = config.getQuiescenceDepth();
     this.searcherType = config.getSearcherType();
+    this.abPruning = config.isAbPruning();
     for (Map.Entry<String, Map<String, String>> entry : config.getEvaluators().entrySet()) {
       this.es.add(Evaluator.create(entry.getKey(), entry.getValue()));
     }
@@ -48,7 +50,11 @@ public class Searcher {
       ChessMove mv = null;
       switch(this.searcherType) {
         case SearcherType.MINIMAX:
-          mv = this.searchDepthMinimax(d, stop);
+          if (this.abPruning) {
+            mv = this.searchDepthMinimax(d, -Float.MAX_VALUE, Float.MAX_VALUE, stop);
+          } else {
+            mv = this.searchDepthMinimax(d, stop);
+          }
           break;
         case SearcherType.NEGAMAX:
           mv = this.searchDepthNegamax(d, stop);
@@ -72,6 +78,25 @@ public class Searcher {
     this.p.trimCheckMoves(true);
     for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
       float score = this.minimax(entry.getValue(), d - 1, stop);
+      if ((this.p.isWhiteTurn() && score > bestScore) || (!this.p.isWhiteTurn() && score < bestScore)) {
+        bestScore = score;
+        mv = entry.getKey();
+      }
+      if (stop.get()) {
+        return null;
+      }
+    }
+    this.evaluation = bestScore;
+    return mv;
+  }
+
+  private ChessMove searchDepthMinimax(int d, float a, float b, MutableBoolean stop) {
+    ChessMove mv = null;
+    float bestScore = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
+    this.p.generateMoves(true);
+    this.p.trimCheckMoves(true);
+    for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
+      float score = this.minimax(entry.getValue(), a, b, d - 1, stop);
       if ((this.p.isWhiteTurn() && score > bestScore) || (!this.p.isWhiteTurn() && score < bestScore)) {
         bestScore = score;
         mv = entry.getKey();
@@ -128,6 +153,50 @@ public class Searcher {
       float score = this.minimax(nextP, d - 1, stop);
       if ((p.isWhiteTurn() && score > bestScore) || (!p.isWhiteTurn() && score < bestScore)) {
         bestScore = score;
+      }
+      it.remove();
+    }
+    return bestScore;
+  }
+
+  private float minimax(ChessPosition p, float a, float b, int d, MutableBoolean stop) {
+    if (stop.get()) {
+      return 0;
+    }
+    this.n++;
+    if (d == 0) {
+      float evaluation = 0;
+      for (Evaluator e : this.es) {
+        evaluation += e._evaluate(p);
+      }
+      return evaluation;
+    }
+    p.generateMoves();
+    p.trimCheckMoves();
+    ChessResult result = p.getGameResult();
+    if (result != ChessResult.NOT_OVER) {
+      return ChessResult.resultScoreFloat(result);
+    }
+    float bestScore = p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
+    Iterator<ChessPosition> it = p.getChildren().values().iterator();
+    while (it.hasNext()) {
+      ChessPosition nextP = it.next();
+      float score = this.minimax(nextP, a, b, d - 1, stop);
+      if ((p.isWhiteTurn() && score > bestScore) || (!p.isWhiteTurn() && score < bestScore)) {
+        bestScore = score;
+      }
+      if (p.isWhiteTurn()) {
+        a = Math.max(a, score);
+        if (b <= a) {
+          p.getChildren().clear();
+          break;
+        }
+      } else {
+        b = Math.min(b, score);
+        if (b <= a) {
+          p.getChildren().clear();
+          break;
+        }
       }
       it.remove();
     }

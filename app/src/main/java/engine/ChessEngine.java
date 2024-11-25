@@ -21,7 +21,8 @@ public class ChessEngine extends Thread {
     engine.s.configure(position, ChessEngineConfiguration.of(Map.of(
       "depth", "10",
       "quiescenceDepth", "6",
-      "searcherType", "negamax",
+      "searcherType", "minimax",
+      "abPruning", "false",
       "evaluators", Map.of(
         "material", Map.of(
           "vPawn", "1",
