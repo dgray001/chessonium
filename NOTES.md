@@ -27,9 +27,9 @@ I also was generating moves for all the leaf nodes which is unnecessary, so I st
 Next big optimization needs to be not storing every position in memory (only the move chain?)
 Also related to that I can optimize the move chain to only store 16 bits for a move
 
-I implemented iterative deepening and measured nodes/second as number of times a position is hit by the search, which brought my nodes/second to ~90,000 kn/s
-Of course, this is with an empty evaluator, but it does show that my program is plenty fast enough
-Also, since I just use minimax with no pruning or other search optimizations, the depth is only to 8-9 in a few seconds, but with 90,000 kn/s I could easily get 20+ depth with search optimizations
+I implemented iterative deepening and measured nodes/second as number of times a position is hit by the search, which brought my nodes/second to ~475 kn/s
+Of course, this is with a simple evaluator, but it does show that my program is plenty fast enough
+Also, since I just use minimax with no pruning or other search optimizations, this speed is only getting me to depth 4-5 in a few seconds
 
 ### Example Code
 

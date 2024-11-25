@@ -53,11 +53,11 @@ public class ChessEngine extends Thread {
         int moves = this.moves;
         this.s.setPosition(this.p);
         long ts = Instant.now().toEpochMilli();
-        Logger.log("Starting", moves);
+        Logger.log("Starting move: " + moves);
         this.s.search(this.maxDepth, this.notified);
         synchronized (this.lock) {
           long t = Instant.now().toEpochMilli() - ts;
-          Logger.log("Finished", moves, this.s.getN(), t, 0.01 * Math.round(100 * (this.s.getN() / ((float)t))) + " kn/s");
+          Logger.log("Finished move " + moves, this.s.getN(), t, 0.01 * Math.round(100 * (this.s.getN() / ((float)t))) + " kn/s");
           while (!this.notified.get()) {
             this.lock.wait();
           }

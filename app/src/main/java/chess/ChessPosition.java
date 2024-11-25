@@ -298,7 +298,10 @@ public class ChessPosition {
   }
 
   public void generateMoves() {
-    if (this.movesGenerated) {
+    this.generateMoves(false);
+  }
+  public void generateMoves(boolean force) {
+    if (this.movesGenerated && !force) {
       return;
     }
     this.whiteTurn = !this.whiteTurn;
@@ -307,6 +310,14 @@ public class ChessPosition {
     this.whiteTurn = !this.whiteTurn;
     this._generateMoves();
     this.movesGenerated = true;
+  }
+
+  public void prepareGenerateNextMove() {
+    this.whiteTurn = !this.whiteTurn;
+    this._generateMoves();
+    this.spacesEnemyAttacking = this.spacesAttacked;
+    this.children = null;
+    this.whiteTurn = !this.whiteTurn;
   }
 
   private void _generateMoves() {
@@ -852,7 +863,10 @@ public class ChessPosition {
 
   // Trims illegal moves that would put the king in check
   public synchronized void trimCheckMoves() {
-    if (this.checkMovesTrimmed || !this.movesGenerated) {
+    this.trimCheckMoves(false);
+  }
+  public synchronized void trimCheckMoves(boolean force) {
+    if (force && (this.checkMovesTrimmed || !this.movesGenerated)) {
       return;
     }
     Iterator<Map.Entry<ChessMove, ChessPosition>> it = this.children.entrySet().iterator();
