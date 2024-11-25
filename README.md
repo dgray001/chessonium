@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.1.2: Alpha beta pruning for minimax
+v0.1.3: Only one evaluator
 
 ## Plans
 

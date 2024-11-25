@@ -7,9 +7,11 @@ import lombok.Getter;
 import utilities.Logger;
 
 public class ChessEngineConfiguration {
-  // all evaluators and their configuration
+  // the evaluator and its configuration
   @Getter
-  private Map<String, Map<String, String>> evaluators = new HashMap<>();
+  private String evaluatorName = "equal";
+  @Getter
+  private Map<String, String> evaluatorConfig;
   // maximum depth for iterative deepening
   @Getter
   private int depth = 1;
@@ -34,12 +36,9 @@ public class ChessEngineConfiguration {
     sb.append("\nQuiescence Depth: " + this.quiescenceDepth);
     sb.append("\nSearcher Type: " + this.searcherType.name().toLowerCase());
     sb.append("\nAlpha-Beta Pruning: " + this.abPruning);
-    sb.append("\nEvaluators:");
-    for (Map.Entry<String, Map<String, String>> entry : this.evaluators.entrySet()) {
-      sb.append("\n  " + entry.getKey() + ":");
-      for (Map.Entry<String, String> evalConfig : entry.getValue().entrySet()) {
-        sb.append("\n    " + evalConfig.getKey() + ": " + evalConfig.getValue());
-      }
+    sb.append("\nEvaluator (" + this.evaluatorName + "):");
+    for (Map.Entry<String, String> entry : this.evaluatorConfig.entrySet()) {
+      sb.append("\n  " + entry.getKey() + ": " + entry.getValue());
     }
     return sb.toString();
   }
@@ -67,8 +66,11 @@ public class ChessEngineConfiguration {
           case "abPruning":
             config.abPruning = Evaluator.configBool(v);
             break;
-          case "evaluators":
-            config.evaluators = (Map<String, Map<String, String>>) entry.getValue();
+          case "evaluatorName":
+            config.evaluatorName = v;
+            break;
+          case "evaluatorConfig":
+            config.evaluatorConfig = (Map<String, String>) entry.getValue();
             break;
           default:
             Logger.err("Unknown chess engine configuration key", entry.getKey());

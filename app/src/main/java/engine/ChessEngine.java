@@ -23,15 +23,14 @@ public class ChessEngine extends Thread {
       "quiescenceDepth", "6",
       "searcherType", "minimax",
       "abPruning", "false",
-      "evaluators", Map.of(
-        "material", Map.of(
-          "vPawn", "1",
-          "vKnight", "3",
-          "vBishop", "3",
-          "vRook", "5",
-          "vQueen", "9",
-          "vKing", "1000"
-        )
+      "evaluatorName", "material",
+      "evaluatorConfig", Map.of(
+        "vPawn", "1",
+        "vKnight", "3",
+        "vBishop", "3",
+        "vRook", "5",
+        "vQueen", "9",
+        "vKing", "1000"
       )
     )));
     engine.setDaemon(false);

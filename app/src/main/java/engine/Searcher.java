@@ -1,8 +1,6 @@
 package engine;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import chess.ChessMove;
@@ -14,7 +12,7 @@ import utilities.MutableBoolean;
 
 public class Searcher {
   private ChessPosition p;
-  private List<Evaluator> es = new ArrayList<>();
+  private Evaluator e;
   private int depthLimit;
   private int quiescenceDepth;
   private SearcherType searcherType;
@@ -32,9 +30,7 @@ public class Searcher {
     this.quiescenceDepth = config.getQuiescenceDepth();
     this.searcherType = config.getSearcherType();
     this.abPruning = config.isAbPruning();
-    for (Map.Entry<String, Map<String, String>> entry : config.getEvaluators().entrySet()) {
-      this.es.add(Evaluator.create(entry.getKey(), entry.getValue()));
-    }
+    this.e = Evaluator.create(config.getEvaluatorName(), config.getEvaluatorConfig());
   }
 
   void setPosition(ChessPosition p) {
@@ -134,11 +130,7 @@ public class Searcher {
     }
     this.n++;
     if (d == 0) {
-      float evaluation = 0;
-      for (Evaluator e : this.es) {
-        evaluation += e._evaluate(p);
-      }
-      return evaluation;
+      return this.e._evaluate(p);
     }
     p.generateMoves();
     p.trimCheckMoves();
@@ -165,11 +157,7 @@ public class Searcher {
     }
     this.n++;
     if (d == 0) {
-      float evaluation = 0;
-      for (Evaluator e : this.es) {
-        evaluation += e._evaluate(p);
-      }
-      return evaluation;
+      return this.e._evaluate(p);
     }
     p.generateMoves();
     p.trimCheckMoves();
@@ -209,11 +197,7 @@ public class Searcher {
     }
     this.n++;
     if (d == 0) {
-      float evaluation = 0;
-      for (Evaluator e : this.es) {
-        evaluation += e._evaluate(p);
-      }
-      return color * evaluation;
+      return this.e._evaluate(p);
     }
     p.generateMoves();
     p.trimCheckMoves();
