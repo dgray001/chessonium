@@ -27,51 +27,10 @@ I also was generating moves for all the leaf nodes which is unnecessary, so I st
 Next big optimization needs to be not storing every position in memory (only the move chain?)
 Also related to that I can optimize the move chain to only store 16 bits for a move
 
+I implemented iterative deepening and measured nodes/second as number of times a position is hit by the search, which brought my nodes/second to ~90,000 kn/s
+Of course, this is with an empty evaluator, but it does show that my program is plenty fast enough
+Also, since I just use minimax with no pruning or other search optimizations, the depth is only to 8-9 in a few seconds, but with 90,000 kn/s I could easily get 20+ depth with search optimizations
+
 ### Example Code
 
 #### Search / Evaluation
-    // Minimax algorithm with recursion and no excessive board storage
-    public int minimax(int depth, boolean maximizingPlayer) {
-        if (depth == 0 || board.isGameOver()) {
-            return board.evaluate(); // Evaluate the current board position
-        }
-
-        int bestScore = maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-
-        MoveGenerator moveGenerator = new MoveGenerator(board); // Generate moves dynamically
-        Move move;
-        while ((move = moveGenerator.nextMove()) != null) {
-            board.makeMove(move); // Make the move
-            int score = minimax(depth - 1, !maximizingPlayer); // Recursive call
-            board.undoMove(move); // Undo the move
-
-            if (maximizingPlayer) {
-                bestScore = Math.max(bestScore, score);
-            } else {
-                bestScore = Math.min(bestScore, score);
-            }
-        }
-
-        return bestScore;
-    }
-
-    // Find the best move using minimax
-    public Move findBestMove(int depth) {
-        Move bestMove = null;
-        int bestScore = Integer.MIN_VALUE;
-
-        MoveGenerator moveGenerator = new MoveGenerator(board);
-        Move move;
-        while ((move = moveGenerator.nextMove()) != null) {
-            board.makeMove(move); // Make the move
-            int score = minimax(depth - 1, false); // Evaluate with minimax
-            board.undoMove(move); // Undo the move
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
-            }
-        }
-
-        return bestMove;
-    }

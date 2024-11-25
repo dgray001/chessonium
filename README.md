@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.0.19: Fixed castling bugs
+v0.0.20: Initial iterative deepening
 
 ## Plans
 

@@ -1,6 +1,9 @@
 package chess;
 
+import lombok.Getter;
+
 public class ChessPiece {
+  @Getter
   private ChessPieceType type;
   private boolean color;
 

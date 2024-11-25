@@ -29,7 +29,7 @@ public interface Evaluator {
 
   default void setConfig(Map<String, String> config) {
     for (Map.Entry<String, String> entry : config.entrySet()) {
-      this._setConfig(entry.getKey().toLowerCase(), entry.getValue());
+      this._setConfig(entry.getKey(), entry.getValue());
     }
   }
 

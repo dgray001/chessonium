@@ -6,11 +6,12 @@ import java.util.Map;
 import chess.ChessMove;
 import chess.ChessPosition;
 import utilities.Logger;
+import utilities.MutableBoolean;
 
 public class ChessEngine extends Thread {
   private ChessPosition p;
   private final Object lock = new Object();
-  private boolean notified = false;
+  private MutableBoolean notified = new MutableBoolean(false);
   private int moves = 1;
   private Searcher s = new Searcher();
   private int maxDepth;
@@ -26,7 +27,7 @@ public class ChessEngine extends Thread {
       "vQueen", "9",
       "vKing", "1000"
     )));
-    engine.maxDepth = 2;
+    engine.maxDepth = 10;
     engine.setDaemon(false);
     engine.start();
     return engine;
@@ -40,33 +41,27 @@ public class ChessEngine extends Thread {
     this.p = newP;
     synchronized (this.lock) {
       this.moves++;
-      this.notified = true;
+      this.notified.set(true);
       this.lock.notify();
     }
   }
 
   public void run() {
     Logger.log("Chessonium engine starting ...");
-    Runtime rt = Runtime.getRuntime();
     try {
       while (true) {
         int moves = this.moves;
-        this.s.playMove(this.p);
+        this.s.setPosition(this.p);
         long ts = Instant.now().toEpochMilli();
         Logger.log("Starting", moves);
-        while(!this.notified) {
-          if (this.s.search(this.maxDepth, 1000)) {
-            break;
-          }
-          Logger.log("Calculating", this.s.getN(), rt.totalMemory() / (1024 * 1024) + " MB", rt.maxMemory() / (1024 * 1024) + " MB", rt.freeMemory() / (1024 * 1024) + " MB");
-        }
+        this.s.search(this.maxDepth, this.notified);
         synchronized (this.lock) {
           long t = Instant.now().toEpochMilli() - ts;
           Logger.log("Finished", moves, this.s.getN(), t, 0.01 * Math.round(100 * (this.s.getN() / ((float)t))) + " kn/s");
-          while (!this.notified) {
+          while (!this.notified.get()) {
             this.lock.wait();
           }
-          this.notified = false;
+          this.notified.set(false);
         }
       }
     } catch (InterruptedException e) {

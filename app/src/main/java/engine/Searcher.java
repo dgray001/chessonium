@@ -1,51 +1,88 @@
 package engine;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Map;
 
+import chess.ChessMove;
 import chess.ChessPosition;
+import chess.ChessResult;
 import lombok.Getter;
+import utilities.Logger;
+import utilities.MutableBoolean;
 
 public class Searcher {
   private ChessPosition p;
   private Evaluator e;
-  private Queue<ChessPosition> q = new ArrayDeque<>();
-  private int d = 0;
   @Getter
   private int n = 0;
+  @Getter
+  private ChessMove bestMove = null;
+  private float evaluation = 0;
 
   void configure(ChessPosition p, Evaluator e) {
     this.p = p;
     this.e = e;
   }
 
-  void playMove(ChessPosition p) {
+  void setPosition(ChessPosition p) {
     this.p = p;
-    this.q.clear();
-    this.q.add(p);
-    this.d = 0;
     this.n = 0;
-    // TODO: keep positions that are part of this position
+    this.bestMove = null;
+    this.evaluation = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
   }
 
-  boolean search(int limit, int amount) {
-    while(amount > 0) {
-      ChessPosition pos = this.q.poll();
-      if (pos == null) {
-        return true;
+  public boolean search(int limit, MutableBoolean stop) {
+    for (int d = 1; d <= limit; d++) {
+      Logger.log("Searching at depth", d);
+      ChessMove mv = this.searchDepth(d, stop);
+      if (stop.get()) {
+        break;
       }
-      pos.setEvaluation(this.e.evaluate(pos));
-      this.d = pos.getDepth() - this.p.getDepth();
-      this.n++;
-      if (this.d < limit) {
-        pos.generateMoves();
-        pos.trimCheckMoves();
-        for (ChessPosition p : pos.getChildren().values()) {
-          this.q.add(p);
-        }
-      }
-      amount--;
+      this.bestMove = mv;
+      Logger.log("Finshed depth", d, "with evaluation", this.evaluation, "and best move", this.bestMove.toString());
     }
     return false;
+  }
+
+  private ChessMove searchDepth(int d, MutableBoolean stop) {
+    ChessMove mv = null;
+    float bestScore = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
+    this.p.generateMoves();
+    this.p.trimCheckMoves();
+    for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
+      float score = this.minimax(entry.getValue(), d - 1, stop);
+      if ((this.p.isWhiteTurn() && score > bestScore) || (!this.p.isWhiteTurn() && score < bestScore)) {
+        bestScore = score;
+        mv = entry.getKey();
+      }
+      if (stop.get()) {
+        return null;
+      }
+    }
+    this.evaluation = bestScore;
+    return mv;
+  }
+
+  private float minimax(ChessPosition p, int d, MutableBoolean stop) {
+    if (stop.get()) {
+      return 0;
+    }
+    this.n++;
+    if (d == 0) {
+      return this.e._evaluate(p);
+    }
+    p.generateMoves();
+    p.trimCheckMoves();
+    ChessResult result = p.getGameResult();
+    if (result != ChessResult.NOT_OVER) {
+      return ChessResult.resultScoreFloat(result);
+    }
+    float bestScore = p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
+    for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
+      float score = this.minimax(entry.getValue(), d - 1, stop);
+      if ((this.p.isWhiteTurn() && score > bestScore) || (!this.p.isWhiteTurn() && score < bestScore)) {
+        bestScore = score;
+      }
+    }
+    return 0;
   }
 }

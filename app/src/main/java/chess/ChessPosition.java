@@ -68,6 +68,7 @@ public class ChessPosition {
   private long whitePieces = 0L;
   private long blackPieces = 0L;
   // true if white's turn, false if black's turn
+  @Getter
   private boolean whiteTurn;
   // bitwise representation of which space the current player's turn can attack en passant
   private long enPassant;
@@ -402,6 +403,25 @@ public class ChessPosition {
   public static int[] coordinatesFromLong(long l) {
     int i = Long.numberOfTrailingZeros(l);
     return new int[]{(i%8), (i/8)};
+  }
+
+  public static String spaceFromLong(long l) {
+    int[] c = coordinatesFromLong(l);
+    return Character.toString((char)('A' + c[1])) + Integer.toString((char)(c[0] + 1));
+  }
+
+  public ChessResult getGameResult() {
+    if (this.children.size() > 0) {
+      // TODO: check insufficient material, draw by repitition, and 50 move rule
+      return ChessResult.NOT_OVER;
+    }
+    if (!this.inCheck()) {
+      return ChessResult.DRAW_STALEMATE;
+    }
+    if (this.whiteTurn) {
+      return ChessResult.BLACK_CHECKMATE;
+    }
+    return ChessResult.WHITE_CHECKMATE;
   }
 
   private synchronized void generatePawnMoves(byte type, long p) {

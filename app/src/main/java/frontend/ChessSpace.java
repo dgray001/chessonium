@@ -19,7 +19,6 @@ import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.Setter;
 import services.Images;
-import utilities.Logger;
 
 public class ChessSpace implements Clickable {
   private ChessBoard board;
@@ -65,7 +64,7 @@ public class ChessSpace implements Clickable {
     if (c_draw == 7) {
       Text t = new Text();
       t.setFont(new Font("Montserrat", 12));
-      t.setText(Integer.toString(r));
+      t.setText(Integer.toString(r + 1));
       t.setFill(Color.web(this.lightSpace ? "#987455" : "#f0d9b5"));
       t.setStyle("-fx-font-weight: bold");
       VBox box = new VBox();

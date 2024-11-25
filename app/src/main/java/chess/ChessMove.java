@@ -27,4 +27,13 @@ public record ChessMove(
   public static ChessMove createChessMove(ChessMove mv, byte promotionPiece) {
     return new ChessMove(mv.piece(), mv.start(), mv.end(), mv.castling(), mv.isEnPassant(), mv.enPassant(), promotionPiece);
   }
+
+  @Override
+  public String toString() {
+    ChessPiece piece = ChessPiece.fromByte(this.piece);
+    String s = piece.getType().toString();
+    s += " " + ChessPosition.spaceFromLong(this.start);
+    s += " to " + ChessPosition.spaceFromLong(this.end);
+    return s;
+  }
 }
