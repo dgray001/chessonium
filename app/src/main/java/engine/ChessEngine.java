@@ -1,7 +1,6 @@
 package engine;
 
 import java.time.Instant;
-import java.util.Map;
 
 import chess.ChessMove;
 import chess.ChessPosition;
@@ -13,26 +12,13 @@ public class ChessEngine extends Thread {
   private final Object lock = new Object();
   private MutableBoolean notified = new MutableBoolean(false);
   private int moves = 1;
-  private Searcher s = new Searcher();
+  private Searcher s;
 
-  public static ChessEngine create(ChessPosition position) {
+  public static ChessEngine create(ChessPosition position, ChessEngineConfiguration config) {
+    Logger.log("Configuring chess engine with:\n" + config.toString());
     ChessEngine engine = new ChessEngine();
     engine.p = position;
-    engine.s.configure(position, ChessEngineConfiguration.of(Map.of(
-      "depth", "10",
-      "quiescenceDepth", "6",
-      "searcherType", "minimax",
-      "abPruning", "false",
-      "evaluatorName", "material",
-      "evaluatorConfig", Map.of(
-        "vPawn", "1",
-        "vKnight", "3",
-        "vBishop", "3",
-        "vRook", "5",
-        "vQueen", "9",
-        "vKing", "1000"
-      )
-    )));
+    engine.s = Searcher.create(position, config);
     engine.setDaemon(false);
     engine.start();
     return engine;

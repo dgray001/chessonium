@@ -1,7 +1,6 @@
 package engine;
 
 import chess.ChessPosition;
-import utilities.Logger;
 
 public class Evaluator_Material implements Evaluator {
   protected float vPawn;

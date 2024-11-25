@@ -1,10 +1,13 @@
 package frontend;
 
+import java.util.Map;
+
 import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.ChessStartPosition;
 import engine.ChessEngine;
+import engine.ChessEngineConfiguration;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -115,7 +118,21 @@ public class ChessBoard extends FrontendElement implements Clickable {
     }
     this.position = ChessPosition.createPosition(ChessStartPosition.STANDARD);
     this.propagatePosition();
-    this.engine = ChessEngine.create(this.position);
+    this.engine = ChessEngine.create(this.position, ChessEngineConfiguration.of(Map.of(
+      "depth", "10",
+      "quiescenceDepth", "6",
+      "searcherType", "minimax",
+      "abPruning", "false",
+      "evaluatorName", "material",
+      "evaluatorConfig", Map.of(
+        "vPawn", "1",
+        "vKnight", "3",
+        "vBishop", "3",
+        "vRook", "5",
+        "vQueen", "9",
+        "vKing", "1000"
+      )
+    )));
   }
 
   public void spaceSelected(int r, int c) {

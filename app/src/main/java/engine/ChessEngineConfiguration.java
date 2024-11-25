@@ -1,6 +1,5 @@
 package engine;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
@@ -25,7 +24,6 @@ public class ChessEngineConfiguration {
   @Getter
   private boolean abPruning = false;
 
-  // TODO: add configurable ab pruning
   // TODO: add definitions for what quiescence can mean
   // TODO: add ways to sort moves (including based on previous depths?)
 
