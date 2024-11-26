@@ -2,6 +2,7 @@ package frontend;
 
 import java.util.Map;
 
+import chess.ChessConstants;
 import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
@@ -22,7 +23,7 @@ import utilities.Logger;
 public class ChessBoard extends FrontendElement implements Clickable {
   private ChessPosition position;
   private ChessEngine engine;
-  private ChessSpace[][] spaces = new ChessSpace[ChessPosition.BOARD_SIZE][ChessPosition.BOARD_SIZE];
+  private ChessSpace[][] spaces = new ChessSpace[ChessConstants.BOARD_SIZE][ChessConstants.BOARD_SIZE];
   @Getter
   private GridPane node;
   @Setter
@@ -35,8 +36,8 @@ public class ChessBoard extends FrontendElement implements Clickable {
   public Node _drawInitial() {
     this.node = new GridPane();
     this.node.setAlignment(Pos.CENTER);
-    for (int r = 0; r < ChessPosition.BOARD_SIZE; r++) {
-      for (int c = 0; c < ChessPosition.BOARD_SIZE; c++) {
+    for (int r = 0; r < ChessConstants.BOARD_SIZE; r++) {
+      for (int c = 0; c < ChessConstants.BOARD_SIZE; c++) {
         this.spaces[r][c] = new ChessSpace(this, r, c, 7-r, c);
       }
     }
@@ -124,14 +125,18 @@ public class ChessBoard extends FrontendElement implements Clickable {
       "quiescenceDepth", "6",
       "searcherType", "negamax",
       "abPruning", "true",
-      "evaluatorName", "material",
+      "evaluatorName", "activity",
       "evaluatorConfig", Map.of(
         "vPawn", "1",
         "vKnight", "3",
         "vBishop", "3",
         "vRook", "5",
         "vQueen", "9",
-        "vKing", "1000"
+        "vKing", "1000",
+        "aSpace", "0.05",
+        "aEnemySpace", "0.05",
+        "aEnemyPiece", "0.05",
+        "aKingSpace", "0.05"
       )
     )));
   }

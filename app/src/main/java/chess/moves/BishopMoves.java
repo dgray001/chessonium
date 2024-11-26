@@ -11,7 +11,7 @@ import chess.ChessPosition;
 public class BishopMoves {
   private static BishopMoves singleton = new BishopMoves();
 
-  private final Map<Long, Long[][]> bishopMoves = new HashMap<Long, Long[][]>();
+  private final Map<Long, Long[][]> bishopMoves = new HashMap<Long, Long[][]>() {{ put(0L, new Long[0][0]); }};
 
   private BishopMoves() {
     for (long space : ChessConstants.ALL_SPACES) {
@@ -35,7 +35,7 @@ public class BishopMoves {
         }
         validMoves[i] = mvs.stream().toArray(Long[]::new);
       }
-      this.bishopMoves.put(Long.valueOf(space), validMoves);
+      this.bishopMoves.put(space, validMoves);
     }
   }
 

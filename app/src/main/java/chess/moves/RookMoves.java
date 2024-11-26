@@ -11,7 +11,7 @@ import chess.ChessPosition;
 public class RookMoves {
   private static RookMoves singleton = new RookMoves();
 
-  private final Map<Long, Long[][]> rookMoves = new HashMap<Long, Long[][]>();
+  private final Map<Long, Long[][]> rookMoves = new HashMap<Long, Long[][]>() {{ put(0L, new Long[0][0]); }};
 
   private RookMoves() {
     for (long space : ChessConstants.ALL_SPACES) {
@@ -35,7 +35,7 @@ public class RookMoves {
         }
         validMoves[i] = mvs.stream().toArray(Long[]::new);
       }
-      this.rookMoves.put(Long.valueOf(space), validMoves);
+      this.rookMoves.put(space, validMoves);
     }
   }
 

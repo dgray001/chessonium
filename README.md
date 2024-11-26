@@ -1,12 +1,11 @@
 
 ### Chessonium
 
-v0.1.6: Configure ab into negamax search
+v0.1.7: Piece activity evaluator
 
 ## Plans
 
 0.2:
-v0.1.6: Add evaluator for piece activity (existing move table)
 v0.1.7: Add evaluator / configuration for pawn structure cases (doubled pawns, isolated pawns, passed pawns, etc...)
 Other evaluator ideas:
   Activity based on which square (not existing move table)
@@ -16,4 +15,4 @@ Can read in configuration from file
 
 ## Bugs
 
-Negamax not working -> to demonstrate play e4,d5,Ba6,Nxa6 then it evaluates +12 for the move Qg4 (at depth of 4) so it's switching the eval somehow
+Also, started getting out of memory errors (!!!) => this may be due to ide or to the crashes since this happened in conjunction with crashes

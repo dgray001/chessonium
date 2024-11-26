@@ -13,6 +13,7 @@ public class Searcher_MinimaxAB extends Searcher {
   private ChessMove[] bestLine;
 
   public void search(MutableBoolean stop) {
+    Logger.log("Initial evaluation at depth 0: " + this.e.evaluate(this.p));
     for (int d = 1; d <= this.depthLimit; d++) {
       Logger.log("Searching at depth", d);
       this.bestLine = this.searchDepthMinimax(d, -Float.MAX_VALUE, Float.MAX_VALUE, stop);
@@ -20,7 +21,7 @@ public class Searcher_MinimaxAB extends Searcher {
         break;
       }
       this.bestMove = this.bestLine[0];
-      Logger.log("Finshed depth " + d + " (" + this.evaluation + ")", this.bestLine);
+      Logger.log("Finished depth " + d + " (" + this.evaluation + ")", this.bestLine);
     }
   }
 

@@ -15,23 +15,6 @@ import utilities.Logger;
 import lombok.Getter;
 
 public class ChessPosition {
-  // board is a square of this size
-  public static final int BOARD_SIZE = 8;
-
-  // files are columns
-  public static long[] files = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
-  // files are rows
-  public static long[] ranks = new long[]{
-    0x0101010101010101L,// every 8th bit is 1, starting with the first bit
-    0x0101010101010101L << 1,
-    0x0101010101010101L << 2,
-    0x0101010101010101L << 3,
-    0x0101010101010101L << 4,
-    0x0101010101010101L << 5,
-    0x0101010101010101L << 6,
-    0x0101010101010101L << 7
-  };
-
   // position key set deterministically by this class
   @Getter
   private int key;
@@ -62,8 +45,11 @@ public class ChessPosition {
   @Getter
   private long bKings = 0L;
   // redundant information for classes of pieces
+  @Getter
   private long allPieces = 0L;
+  @Getter
   private long whitePieces = 0L;
+  @Getter
   private long blackPieces = 0L;
   // true if white's turn, false if black's turn
   @Getter
@@ -72,20 +58,6 @@ public class ChessPosition {
   private long enPassant;
   // bitwise representation of castling rights -> white queenside, white kingside, black queenside, black kingside
   private byte castlingRights;
-  private static final byte CASTLING_WHITE_QUEENSIDE = 1;
-  private static final byte CASTLING_WHITE_KINGSIDE = 2;
-  private static final byte CASTLING_BLACK_QUEENSIDE = 4;
-  private static final byte CASTLING_BLACK_KINGSIDE = 8;
-  private static final byte CASTLING_WHITE = Bitwise.boolsToByte(new boolean[]{true, true});
-  private static final byte CASTLING_BLACK = Bitwise.boolsToByte(new boolean[]{false, false, true, true});
-  private static final long WHITE_QUEENSIDE_ROOK_START = 1L << coordinatesToByte(0, 0);
-  private static final long WHITE_KINGSIDE_ROOK_START = 1L << coordinatesToByte(0, 7);
-  private static final long BLACK_QUEENSIDE_ROOK_START = 1L << coordinatesToByte(7, 0);
-  private static final long BLACK_KINGSIDE_ROOK_START = 1L << coordinatesToByte(7, 7);
-  private static final long WHITE_QUEENSIDE_ROOK_END = 1L << coordinatesToByte(0, 3);
-  private static final long WHITE_KINGSIDE_ROOK_END = 1L << coordinatesToByte(0, 5);
-  private static final long BLACK_QUEENSIDE_ROOK_END = 1L << coordinatesToByte(7, 3);
-  private static final long BLACK_KINGSIDE_ROOK_END = 1L << coordinatesToByte(7, 5);
   // all valid child positions
   @Getter
   private Map<ChessMove, ChessPosition> children;
@@ -301,6 +273,7 @@ public class ChessPosition {
     if (this.movesGenerated && !force) {
       return;
     }
+    this.children = new HashMap<chess.ChessMove,chess.ChessPosition>();
     this.whiteTurn = !this.whiteTurn;
     this._generateMoves(); // TODO: optimize to just get squares the enemy attacks
     this.spacesEnemyAttacking = this.spacesAttacked;
@@ -428,7 +401,7 @@ public class ChessPosition {
     long forward = this.whiteTurn ? (p << 1) : (p >>> 1);
     if ((this.allPieces & forward) == 0) { // no capture going forward
       this.addPawnMove(ChessMove.createChessMove(type, p, forward));
-      if ((ranks[this.whiteTurn ? 1 : 6] & p) != 0) { // check if pawn is on starting square
+      if ((ChessConstants.ranks[this.whiteTurn ? 1 : 6] & p) != 0) { // check if pawn is on starting square
         long forward2 = this.whiteTurn ? (forward << 1) : (forward >>> 1);
         if ((this.allPieces & forward2) == 0) { // no capture going forward
           this.addPawnMove(ChessMove.createChessMove(type, p, forward2, forward));
@@ -439,25 +412,25 @@ public class ChessPosition {
     this.spacesAttacked |= attack1;
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack1) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1));
-    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack1 & this.enPassant) != 0)) { // en passant
+    } else if (((ChessConstants.ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack1 & this.enPassant) != 0)) { // en passant
       this.addPawnMove(ChessMove.createChessMove(type, p, attack1, true));
     }
     long attack2 = this.whiteTurn ? (p << 9) : (p >>> 9);
     this.spacesAttacked |= attack2;
     if (((this.whiteTurn ? this.blackPieces : this.whitePieces) & attack2) != 0) { // must capture going diagonal
       this.addPawnMove(ChessMove.createChessMove(type, p, attack2));
-    } else if (((ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack2 & this.enPassant) != 0)) { // en passant
+    } else if (((ChessConstants.ranks[this.whiteTurn ? 4 : 3] & p) != 0) && ((attack2 & this.enPassant) != 0)) { // en passant
       this.addPawnMove(ChessMove.createChessMove(type, p, attack2, true));
     }
   }
 
   private void addPawnMove(ChessMove mv) {
-    if (this.whiteTurn && (ranks[7] & mv.end()) != 0) {
+    if (this.whiteTurn && (ChessConstants.ranks[7] & mv.end()) != 0) {
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_KNIGHT));
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_BISHOP));
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_ROOK));
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.WHITE_QUEEN));
-    } else if (!this.whiteTurn && (ranks[0] & mv.end()) != 0) {
+    } else if (!this.whiteTurn && (ChessConstants.ranks[0] & mv.end()) != 0) {
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_KNIGHT));
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_BISHOP));
       this.addMove(ChessMove.createChessMove(mv, ChessPiece.BLACK_ROOK));
@@ -535,22 +508,22 @@ public class ChessPosition {
         return;
       }
       if (
-        ((this.castlingRights & CASTLING_WHITE_QUEENSIDE) != 0) &&
+        ((this.castlingRights & ChessConstants.CASTLING_WHITE_QUEENSIDE) != 0) &&
         ((this.allPieces & (p >>> 8)) == 0) &&
         ((this.allPieces & (p >>> 16)) == 0) &&
         ((this.allPieces & (p >>> 24)) == 0) &&
         (this.spacesEnemyAttacking & (p >>> 8)) == 0 &&
         (this.spacesEnemyAttacking & (p >>> 16)) == 0
       ) {
-        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, CASTLING_WHITE_QUEENSIDE, (byte) 0));
+        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, ChessConstants.CASTLING_WHITE_QUEENSIDE, (byte) 0));
       }
       if (
-        ((this.castlingRights & CASTLING_WHITE_KINGSIDE) != 0) &&
+        ((this.castlingRights & ChessConstants.CASTLING_WHITE_KINGSIDE) != 0) &&
         ((this.allPieces & (p << 8)) == 0) &&
         ((this.allPieces & (p << 16)) == 0) &&
         (this.spacesEnemyAttacking & (p << 8)) == 0
       ) {
-        this.addMove(ChessMove.createChessMove(type, p, p << 16, CASTLING_WHITE_KINGSIDE, (byte) 0));
+        this.addMove(ChessMove.createChessMove(type, p, p << 16, ChessConstants.CASTLING_WHITE_KINGSIDE, (byte) 0));
       }
     } else {
       for (long mv : KingMoves.getKingMoves(p)) {
@@ -564,22 +537,22 @@ public class ChessPosition {
         return;
       }
       if (
-        ((this.castlingRights & CASTLING_BLACK_QUEENSIDE) != 0) &&
+        ((this.castlingRights & ChessConstants.CASTLING_BLACK_QUEENSIDE) != 0) &&
         ((this.allPieces & (p >>> 8)) == 0) &&
         ((this.allPieces & (p >>> 16)) == 0) &&
         ((this.allPieces & (p >>> 24)) == 0) &&
         (this.spacesEnemyAttacking & (p >>> 8)) == 0 &&
         (this.spacesEnemyAttacking & (p >>> 16)) == 0
       ) {
-        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, CASTLING_BLACK_QUEENSIDE, (byte) 0));
+        this.addMove(ChessMove.createChessMove(type, p, p >>> 16, ChessConstants.CASTLING_BLACK_QUEENSIDE, (byte) 0));
       }
       if (
-        ((this.castlingRights & CASTLING_BLACK_KINGSIDE) != 0) &&
+        ((this.castlingRights & ChessConstants.CASTLING_BLACK_KINGSIDE) != 0) &&
         ((this.allPieces & (p << 8)) == 0) &&
         ((this.allPieces & (p << 16)) == 0) &&
         (this.spacesEnemyAttacking & (p << 8)) == 0
       ) {
-        this.addMove(ChessMove.createChessMove(type, p, p << 16, CASTLING_BLACK_KINGSIDE, (byte) 0));
+        this.addMove(ChessMove.createChessMove(type, p, p << 16, ChessConstants.CASTLING_BLACK_KINGSIDE, (byte) 0));
       }
     }
   }
@@ -616,39 +589,39 @@ public class ChessPosition {
       captureSquare = this.whiteTurn ? (captureSquare >>> 1) : (captureSquare << 1);
       result.allPieces &= ~captureSquare;
     } else if (mv.castling() > 0) {
-      result.castlingRights &= (this.whiteTurn ? CASTLING_BLACK : CASTLING_WHITE);
+      result.castlingRights &= (this.whiteTurn ? ChessConstants.CASTLING_BLACK : ChessConstants.CASTLING_WHITE);
       switch(mv.castling()) {
-        case CASTLING_WHITE_QUEENSIDE:
-          result.moveWhitePiece(ChessPiece.WHITE_ROOK, WHITE_QUEENSIDE_ROOK_START, WHITE_QUEENSIDE_ROOK_END);
+        case ChessConstants.CASTLING_WHITE_QUEENSIDE:
+          result.moveWhitePiece(ChessPiece.WHITE_ROOK, ChessConstants.WHITE_QUEENSIDE_ROOK_START, ChessConstants.WHITE_QUEENSIDE_ROOK_END);
           break;
-        case CASTLING_WHITE_KINGSIDE:
-          result.moveWhitePiece(ChessPiece.WHITE_ROOK, WHITE_KINGSIDE_ROOK_START, WHITE_KINGSIDE_ROOK_END);
+        case ChessConstants.CASTLING_WHITE_KINGSIDE:
+          result.moveWhitePiece(ChessPiece.WHITE_ROOK, ChessConstants.WHITE_KINGSIDE_ROOK_START, ChessConstants.WHITE_KINGSIDE_ROOK_END);
           break;
-        case CASTLING_BLACK_QUEENSIDE:
-          result.moveBlackPiece(ChessPiece.BLACK_ROOK, BLACK_QUEENSIDE_ROOK_START, BLACK_QUEENSIDE_ROOK_END);
+        case ChessConstants.CASTLING_BLACK_QUEENSIDE:
+          result.moveBlackPiece(ChessPiece.BLACK_ROOK, ChessConstants.BLACK_QUEENSIDE_ROOK_START, ChessConstants.BLACK_QUEENSIDE_ROOK_END);
           break;
-        case CASTLING_BLACK_KINGSIDE:
-          result.moveBlackPiece(ChessPiece.BLACK_ROOK, BLACK_KINGSIDE_ROOK_START, BLACK_KINGSIDE_ROOK_END);
+        case ChessConstants.CASTLING_BLACK_KINGSIDE:
+          result.moveBlackPiece(ChessPiece.BLACK_ROOK, ChessConstants.BLACK_KINGSIDE_ROOK_START, ChessConstants.BLACK_KINGSIDE_ROOK_END);
           break;
         default:
           Logger.err("Unknown castling location", mv.end());
           break;
       }
     } else if (mv.piece() == ChessPiece.WHITE_KING) {
-      result.castlingRights &= CASTLING_BLACK;
+      result.castlingRights &= ChessConstants.CASTLING_BLACK;
     } else if (mv.piece() == ChessPiece.BLACK_KING) {
-      result.castlingRights &= CASTLING_WHITE;
+      result.castlingRights &= ChessConstants.CASTLING_WHITE;
     } else if (mv.piece() == ChessPiece.WHITE_ROOK) {
-      if (mv.start() == WHITE_QUEENSIDE_ROOK_START) {
-        result.castlingRights &= ~CASTLING_WHITE_QUEENSIDE;
-      } else if (mv.start() == WHITE_KINGSIDE_ROOK_START) {
-        result.castlingRights &= ~CASTLING_WHITE_KINGSIDE;
+      if (mv.start() == ChessConstants.WHITE_QUEENSIDE_ROOK_START) {
+        result.castlingRights &= ~ChessConstants.CASTLING_WHITE_QUEENSIDE;
+      } else if (mv.start() == ChessConstants.WHITE_KINGSIDE_ROOK_START) {
+        result.castlingRights &= ~ChessConstants.CASTLING_WHITE_KINGSIDE;
       }
     } else if (mv.piece() == ChessPiece.BLACK_ROOK) {
-      if (mv.start() == BLACK_QUEENSIDE_ROOK_START) {
-        result.castlingRights &= ~CASTLING_BLACK_QUEENSIDE;
-      } else if (mv.start() == BLACK_KINGSIDE_ROOK_START) {
-        result.castlingRights &= ~CASTLING_BLACK_KINGSIDE;
+      if (mv.start() == ChessConstants.BLACK_QUEENSIDE_ROOK_START) {
+        result.castlingRights &= ~ChessConstants.CASTLING_BLACK_QUEENSIDE;
+      } else if (mv.start() == ChessConstants.BLACK_KINGSIDE_ROOK_START) {
+        result.castlingRights &= ~ChessConstants.CASTLING_BLACK_KINGSIDE;
       }
     }
     if (this.whiteTurn) {
@@ -861,7 +834,7 @@ public class ChessPosition {
     this.trimCheckMoves(false);
   }
   public synchronized void trimCheckMoves(boolean force) {
-    if (force && (this.checkMovesTrimmed || !this.movesGenerated)) {
+    if (!force && (this.checkMovesTrimmed || !this.movesGenerated)) {
       return;
     }
     Iterator<Map.Entry<ChessMove, ChessPosition>> it = this.children.entrySet().iterator();

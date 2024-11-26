@@ -1,6 +1,27 @@
 package chess;
 
+import utilities.Bitwise;
+
 public class ChessConstants {
+  // board is a square of this size
+  public static final int BOARD_SIZE = 8;
+
+  // files are columns
+  public static final long[] files = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
+  // files are rows
+  public static final long[] ranks = new long[]{
+    0x0101010101010101L, // every 8th bit is 1, starting with the first bit
+    0x0101010101010101L << 1,
+    0x0101010101010101L << 2,
+    0x0101010101010101L << 3,
+    0x0101010101010101L << 4,
+    0x0101010101010101L << 5,
+    0x0101010101010101L << 6,
+    0x0101010101010101L << 7
+  };
+  public static final long whiteSide = ranks[0] | ranks[1] | ranks[2] | ranks[3];
+  public static final long blackSide = ranks[4] | ranks[5] | ranks[6] | ranks[7];
+
   public static final long[] ALL_SPACES = {
     1L, 2L, 4L, 8L, 16L, 32L, 64L, 128L, 256L, 512L, 1024L, 2048L, 4096L, 
     8192L, 16384L, 32768L, 65536L, 131072L, 262144L, 524288L, 1048576L, 
@@ -15,4 +36,19 @@ public class ChessConstants {
     288230376151711744L, 576460752303423488L, 1152921504606846976L, 
     2305843009213693952L, 4611686018427387904L, -9223372036854775808L
   };
+
+  public static final byte CASTLING_WHITE_QUEENSIDE = 1;
+  public static final byte CASTLING_WHITE_KINGSIDE = 2;
+  public static final byte CASTLING_BLACK_QUEENSIDE = 4;
+  public static final byte CASTLING_BLACK_KINGSIDE = 8;
+  public static final byte CASTLING_WHITE = Bitwise.boolsToByte(new boolean[]{true, true});
+  public static final byte CASTLING_BLACK = Bitwise.boolsToByte(new boolean[]{false, false, true, true});
+  public static final long WHITE_QUEENSIDE_ROOK_START = 1L << ChessPosition.coordinatesToByte(0, 0);
+  public static final long WHITE_KINGSIDE_ROOK_START = 1L << ChessPosition.coordinatesToByte(0, 7);
+  public static final long BLACK_QUEENSIDE_ROOK_START = 1L << ChessPosition.coordinatesToByte(7, 0);
+  public static final long BLACK_KINGSIDE_ROOK_START = 1L << ChessPosition.coordinatesToByte(7, 7);
+  public static final long WHITE_QUEENSIDE_ROOK_END = 1L << ChessPosition.coordinatesToByte(0, 3);
+  public static final long WHITE_KINGSIDE_ROOK_END = 1L << ChessPosition.coordinatesToByte(0, 5);
+  public static final long BLACK_QUEENSIDE_ROOK_END = 1L << ChessPosition.coordinatesToByte(7, 3);
+  public static final long BLACK_KINGSIDE_ROOK_END = 1L << ChessPosition.coordinatesToByte(7, 5);
 }

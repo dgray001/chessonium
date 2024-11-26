@@ -19,6 +19,9 @@ public interface Evaluator {
       case "material":
         evaluator = new Evaluator_Material();
         break;
+      case "activity":
+        evaluator = new Evaluator_Activity();
+        break;
       default:
         Logger.err("Unknown evaluator", evaluatorName);
         return null;

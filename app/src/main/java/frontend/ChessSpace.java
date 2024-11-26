@@ -2,8 +2,8 @@ package frontend;
 
 import java.net.URISyntaxException;
 
+import chess.ChessConstants;
 import chess.ChessPiece;
-import chess.ChessPosition;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,8 +46,8 @@ public class ChessSpace implements Clickable {
     this.lightSpace = ((this.r + this.c) % 2) != 0;
     this.pane = new StackPane();
     this.refreshBackgroundColor();
-    pane.prefWidthProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessPosition.BOARD_SIZE), board.getNode().heightProperty().divide(ChessPosition.BOARD_SIZE)));
-    pane.prefHeightProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessPosition.BOARD_SIZE), board.getNode().heightProperty().divide(ChessPosition.BOARD_SIZE)));
+    pane.prefWidthProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessConstants.BOARD_SIZE), board.getNode().heightProperty().divide(ChessConstants.BOARD_SIZE)));
+    pane.prefHeightProperty().bind(Bindings.min(board.getNode().widthProperty().divide(ChessConstants.BOARD_SIZE), board.getNode().heightProperty().divide(ChessConstants.BOARD_SIZE)));
     board.getNode().add(pane, c_draw, r_draw);
     if (r_draw == 7) {
       Text t = new Text();

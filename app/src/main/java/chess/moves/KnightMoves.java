@@ -11,7 +11,7 @@ import chess.ChessPosition;
 public class KnightMoves {
   private static KnightMoves singleton = new KnightMoves();
 
-  private final Map<Long, Long[]> knightMoves = new HashMap<Long, Long[]>();
+  private final Map<Long, Long[]> knightMoves = new HashMap<Long, Long[]>() {{ put(0L, new Long[0]); }};
 
   private KnightMoves() {
     for (long space : ChessConstants.ALL_SPACES) {
@@ -37,7 +37,7 @@ public class KnightMoves {
         }
         validMoves.add(mv);
       }
-      this.knightMoves.put(Long.valueOf(space), validMoves.stream().toArray(Long[]::new));
+      this.knightMoves.put(space, validMoves.stream().toArray(Long[]::new));
     }
   }
 
