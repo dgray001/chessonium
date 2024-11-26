@@ -38,7 +38,7 @@ public abstract class Searcher {
         Logger.err("Unknown searcher type", c.getSearcherType());
         return null;
     }
-    s.p = p;
+    s.p = p.copyPosition();
     s.depthLimit = c.getDepth();
     s.quiescenceDepth = c.getQuiescenceDepth();
     s.e = Evaluator.create(c.getEvaluatorName(), c.getEvaluatorConfig());
@@ -46,7 +46,7 @@ public abstract class Searcher {
   }
 
   public void setPosition(ChessPosition p) {
-    this.p = p;
+    this.p = p.copyPosition();
     this.n = 0;
     this.bestMove = null;
     this.evaluation = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;

@@ -119,9 +119,10 @@ public class ChessBoard extends FrontendElement implements Clickable {
     this.position = ChessPosition.createPosition(ChessStartPosition.STANDARD);
     this.propagatePosition();
     this.engine = ChessEngine.create(this.position, ChessEngineConfiguration.of(Map.of(
+      "turnOn", "true",
       "depth", "10",
       "quiescenceDepth", "6",
-      "searcherType", "minimax",
+      "searcherType", "negamax",
       "abPruning", "false",
       "evaluatorName", "material",
       "evaluatorConfig", Map.of(

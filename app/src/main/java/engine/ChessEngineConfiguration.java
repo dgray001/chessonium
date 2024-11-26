@@ -6,6 +6,8 @@ import lombok.Getter;
 import utilities.Logger;
 
 public class ChessEngineConfiguration {
+  @Getter
+  private boolean turnOn = false;
   // the evaluator and its configuration
   @Getter
   private String evaluatorName = "equal";
@@ -48,6 +50,9 @@ public class ChessEngineConfiguration {
       try {
         String v = entry.getValue().toString().trim();
         switch(entry.getKey().trim()) {
+          case "turnOn":
+            config.turnOn = Evaluator.configBool(v);
+            break;
           case "depth":
             config.depth = Evaluator.configInt(v);
             break;

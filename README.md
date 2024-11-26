@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.1.4: Refactor to abstract different searches
+v0.1.5: Refactor to return best line
 
 ## Plans
 
@@ -17,4 +17,4 @@ Can read in configuration from file
 
 ## Bugs
 
-King in check from queen and could move toward it diagonally
+Negamax not working -> to demonstrate play e4,d5,Ba6,Nxa6 then it evaluates +12 for the move Qg4 (at depth of 4) so it's switching the eval somehow

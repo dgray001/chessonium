@@ -35,8 +35,6 @@ public class ChessPosition {
   // position key set deterministically by this class
   @Getter
   private int key;
-  @Getter
-  private int depth;
   private static int nextKey = 1;
   // bitboard representation
   @Getter
@@ -104,7 +102,6 @@ public class ChessPosition {
   public static ChessPosition createPosition(ChessStartPosition startPosition) {
     ChessPosition position = new ChessPosition();
     ChessPosition.setKey(position);
-    position.depth = 0;
     switch(startPosition) {
       case STANDARD:
         position.setupPiecesStandard();
@@ -305,19 +302,11 @@ public class ChessPosition {
       return;
     }
     this.whiteTurn = !this.whiteTurn;
-    this._generateMoves();
+    this._generateMoves(); // TODO: optimize to just get squares the enemy attacks
     this.spacesEnemyAttacking = this.spacesAttacked;
     this.whiteTurn = !this.whiteTurn;
     this._generateMoves();
     this.movesGenerated = true;
-  }
-
-  public void prepareGenerateNextMove() {
-    this.whiteTurn = !this.whiteTurn;
-    this._generateMoves();
-    this.spacesEnemyAttacking = this.spacesAttacked;
-    this.children = null;
-    this.whiteTurn = !this.whiteTurn;
   }
 
   private void _generateMoves() {
@@ -595,7 +584,7 @@ public class ChessPosition {
     }
   }
 
-  private ChessPosition addMove(ChessMove mv) {
+  public ChessPosition copyPosition() {
     ChessPosition result = new ChessPosition();
     result.wPawns = this.wPawns;
     result.wKnights = this.wKnights;
@@ -612,9 +601,16 @@ public class ChessPosition {
     result.allPieces = this.allPieces;
     result.whitePieces = this.whitePieces;
     result.blackPieces = this.blackPieces;
+    result.whiteTurn = this.whiteTurn;
+    result.enPassant = this.enPassant;
+    result.castlingRights = this.castlingRights;
+    return result;
+  }
+
+  private ChessPosition addMove(ChessMove mv) {
+    ChessPosition result = this.copyPosition();
     result.whiteTurn = !this.whiteTurn;
     result.enPassant = mv.enPassant();
-    result.castlingRights = this.castlingRights;
     long captureSquare = mv.end();
     if (mv.isEnPassant()) {
       captureSquare = this.whiteTurn ? (captureSquare >>> 1) : (captureSquare << 1);
@@ -670,7 +666,6 @@ public class ChessPosition {
         result.moveAndPromoteBlackPiece(mv.piece(), mv.start(), mv.end(), mv.promotionPiece());
       }
     }
-    result.depth = this.depth + 1;
     this.children.put(mv, result);
     ChessPosition.setKey(result);
     return result;

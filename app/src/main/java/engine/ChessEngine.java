@@ -15,6 +15,9 @@ public class ChessEngine extends Thread {
   private Searcher s;
 
   public static ChessEngine create(ChessPosition position, ChessEngineConfiguration config) {
+    if (!config.isTurnOn()) {
+      return new ChessEngine();
+    }
     Logger.log("Configuring chess engine with:\n" + config.toString());
     ChessEngine engine = new ChessEngine();
     engine.p = position;
@@ -25,6 +28,9 @@ public class ChessEngine extends Thread {
   }
 
   public void playMove(ChessMove mv) {
+    if (!this.isAlive()) {
+      return;
+    }
     ChessPosition newP = this.p.getChildren().get(mv);
     if (newP == null) {
       return;
