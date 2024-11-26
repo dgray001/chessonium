@@ -10,39 +10,42 @@ import utilities.Logger;
 import utilities.MutableBoolean;
 
 public class Searcher_MinimaxAB extends Searcher {
+  private ChessMove[] bestLine;
 
   public void search(MutableBoolean stop) {
     for (int d = 1; d <= this.depthLimit; d++) {
       Logger.log("Searching at depth", d);
-      ChessMove mv = this.searchDepthMinimax(d, -Float.MAX_VALUE, Float.MAX_VALUE, stop);
+      this.bestLine = this.searchDepthMinimax(d, -Float.MAX_VALUE, Float.MAX_VALUE, stop);
       if (stop.get()) {
         break;
       }
-      this.bestMove = mv;
-      Logger.log("Finshed depth " + d + " (" + this.evaluation + "): " + this.bestMove);
+      this.bestMove = this.bestLine[0];
+      Logger.log("Finshed depth " + d + " (" + this.evaluation + ")", this.bestLine);
     }
   }
 
-  private ChessMove searchDepthMinimax(int d, float a, float b, MutableBoolean stop) {
-    ChessMove mv = null;
+  private ChessMove[] searchDepthMinimax(int d, float a, float b, MutableBoolean stop) {
+    ChessMove[] line = new ChessMove[d];
     float bestScore = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
     this.p.generateMoves(true);
     this.p.trimCheckMoves(true);
     for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
-      float score = this.minimax(entry.getValue(), a, b, d - 1, stop);
+      ChessMove[] currentLine = new ChessMove[d-1];
+      float score = this.minimax(entry.getValue(), a, b, d - 1, currentLine, stop);
       if ((this.p.isWhiteTurn() && score > bestScore) || (!this.p.isWhiteTurn() && score < bestScore)) {
         bestScore = score;
-        mv = entry.getKey();
+        line[0] = entry.getKey();
+        System.arraycopy(currentLine, 0, line, 1, d - 1);
       }
       if (stop.get()) {
         return null;
       }
     }
     this.evaluation = bestScore;
-    return mv;
+    return line;
   }
 
-  private float minimax(ChessPosition p, float a, float b, int d, MutableBoolean stop) {
+  private float minimax(ChessPosition p, float a, float b, int d, ChessMove[] line, MutableBoolean stop) {
     if (stop.get()) {
       return 0;
     }
@@ -57,12 +60,15 @@ public class Searcher_MinimaxAB extends Searcher {
       return ChessResult.resultScoreFloat(result);
     }
     float bestScore = p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
-    Iterator<ChessPosition> it = p.getChildren().values().iterator();
+    Iterator<Map.Entry<ChessMove, ChessPosition>> it = p.getChildren().entrySet().iterator();
     while (it.hasNext()) {
-      ChessPosition nextP = it.next();
-      float score = this.minimax(nextP, a, b, d - 1, stop);
+      Map.Entry<ChessMove, ChessPosition> entry = it.next();
+      ChessMove[] currentLine = new ChessMove[d-1];
+      float score = this.minimax(entry.getValue(), a, b, d - 1, currentLine, stop);
       if ((p.isWhiteTurn() && score > bestScore) || (!p.isWhiteTurn() && score < bestScore)) {
         bestScore = score;
+        line[0] = entry.getKey();
+        System.arraycopy(currentLine, 0, line, 1, d - 1);
       }
       if (p.isWhiteTurn()) {
         a = Math.max(a, score);

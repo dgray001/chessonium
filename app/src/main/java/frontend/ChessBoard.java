@@ -123,7 +123,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
       "depth", "10",
       "quiescenceDepth", "6",
       "searcherType", "negamax",
-      "abPruning", "false",
+      "abPruning", "true",
       "evaluatorName", "material",
       "evaluatorConfig", Map.of(
         "vPawn", "1",

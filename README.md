@@ -1,12 +1,11 @@
 
 ### Chessonium
 
-v0.1.5: Refactor to return best line
+v0.1.6: Configure ab into negamax search
 
 ## Plans
 
 0.2:
-v0.1.5: Configure ab into negamax search
 v0.1.6: Add evaluator for piece activity (existing move table)
 v0.1.7: Add evaluator / configuration for pawn structure cases (doubled pawns, isolated pawns, passed pawns, etc...)
 Other evaluator ideas:
