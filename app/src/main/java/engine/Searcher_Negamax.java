@@ -53,7 +53,7 @@ public class Searcher_Negamax extends Searcher {
     }
     this.n++;
     if (d == 0) {
-      return color * this.e._evaluate(p);
+      return color * this.e.evaluate(p);
     }
     p.generateMoves();
     p.trimCheckMoves();

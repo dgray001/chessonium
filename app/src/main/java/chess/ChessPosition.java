@@ -847,4 +847,14 @@ public class ChessPosition {
     }
     this.checkMovesTrimmed = true;
   }
+  public synchronized void trimQuietMoves() {
+    Iterator<Map.Entry<ChessMove, ChessPosition>> it = this.children.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<ChessMove, ChessPosition> entry = it.next();
+      if ((entry.getKey().end() & this.allPieces) == 0) {
+        it.remove();
+      }
+    }
+    this.checkMovesTrimmed = true;
+  }
 }

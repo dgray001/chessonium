@@ -52,7 +52,7 @@ public class Searcher_MinimaxAB extends Searcher {
     }
     this.n++;
     if (d == 0) {
-      return this.e._evaluate(p);
+      return this.e.evaluate(p);
     }
     p.generateMoves();
     p.trimCheckMoves();
