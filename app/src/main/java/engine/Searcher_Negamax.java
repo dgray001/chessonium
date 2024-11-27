@@ -33,7 +33,7 @@ public class Searcher_Negamax extends Searcher {
     int color = this.p.isWhiteTurn() ? 1 : -1;
     for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
       ChessMove[] currentLine = new ChessMove[d-1];
-      float score = -this.negamax(entry.getValue(), d - 1, -color, currentLine, stop);
+      float score = -this.negamax(entry.getValue(), d - 1, -color, currentLine, (entry.getKey().end() & p.getAllPieces()) == 0, stop);
       if (score > bestScore) {
         bestScore = score;
         line[0] = entry.getKey();
@@ -47,13 +47,17 @@ public class Searcher_Negamax extends Searcher {
     return line;
   }
 
-  private float negamax(ChessPosition p, int d, int color, ChessMove[] line, MutableBoolean stop) {
+  private float negamax(ChessPosition p, int d, int color, ChessMove[] line, boolean quiescence, MutableBoolean stop) {
     if (stop.get()) {
       return 0;
     }
     this.n++;
-    if (d == 0) {
-      return color * this.e.evaluate(p);
+    if (d < 1) {
+      float standPat = color * this.e.evaluate(p);
+      if (quiescence || d + this.quiescenceDepth < 1) {
+        return standPat;
+      }
+      return this.quiescenceNegamax(p, d, color, standPat, stop);
     }
     p.generateMoves();
     p.trimCheckMoves();
@@ -66,11 +70,42 @@ public class Searcher_Negamax extends Searcher {
     while (it.hasNext()) {
       Map.Entry<ChessMove, ChessPosition> entry = it.next();
       ChessMove[] currentLine = new ChessMove[d-1];
-      float score = -this.negamax(entry.getValue(), d - 1, -color, currentLine, stop);
+      float score = -this.negamax(entry.getValue(), d - 1, -color, currentLine, (entry.getKey().end() & p.getAllPieces()) == 0, stop);
       if (score > bestScore) {
         bestScore = score;
         line[0] = entry.getKey();
         System.arraycopy(currentLine, 0, line, 1, d - 1);
+      }
+      it.remove();
+    }
+    return bestScore;
+  }
+
+  private float quiescenceNegamax(ChessPosition p, int d, int color, float standPat, MutableBoolean stop) {
+    if (stop.get()) {
+      return 0;
+    }
+    if (d + this.quiescenceDepth < 1) {
+      return standPat;
+    }
+    this.n++;
+    p.generateMoves();
+    p.trimCheckMoves();
+    ChessResult result = p.getGameResult();
+    if (result != ChessResult.NOT_OVER) {
+      return color * ChessResult.resultScoreFloat(result);
+    }
+    p.trimQuietMoves();
+    if (p.getChildren().size() == 0) {
+      return standPat;
+    }
+    float bestScore = standPat;
+    Iterator<Map.Entry<ChessMove, ChessPosition>> it = p.getChildren().entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<ChessMove, ChessPosition> entry = it.next();
+      float score = -this.quiescenceNegamax(entry.getValue(), d - 1, -color, -color * this.e.evaluate(entry.getValue()), stop);
+      if (score > bestScore) {
+        bestScore = score;
       }
       it.remove();
     }

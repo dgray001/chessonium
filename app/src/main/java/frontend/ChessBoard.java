@@ -121,19 +121,19 @@ public class ChessBoard extends FrontendElement implements Clickable {
     this.propagatePosition();
     this.engine = ChessEngine.create(this.position, ChessEngineConfiguration.of(Map.of(
       "turnOn", "true",
-      "depth", "2",
+      "depth", "8",
       "quiescenceDepth", "6",
-      "searcherType", "minimax",
-      "abPruning", "false",
+      "searcherType", "negamax",
+      "abPruning", "true",
       "evaluatorName", "activity",
       "evaluatorConfig", Map.of(
         "vPawn", "1",
-        "vKnight", "3",
-        "vBishop", "3",
+        "vKnight", "2.95",
+        "vBishop", "3.05",
         "vRook", "5",
         "vQueen", "9",
         "vKing", "1000",
-        "aSpace", "0.0",
+        "aSpace", "0.00",
         "aEnemySpace", "0.0",
         "aEnemyPiece", "0.0",
         "aKingSpace", "0.0"

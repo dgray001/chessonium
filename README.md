@@ -1,7 +1,7 @@
 
 ### Chessonium
 
-v0.1.8: Initial quiescence search
+v0.1.9: Full quiescence search
 
 ## Plans
 

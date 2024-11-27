@@ -98,7 +98,7 @@ public class Searcher_Minimax extends Searcher {
     if (p.getChildren().size() == 0) {
       return standPat;
     }
-    float bestScore = p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
+    float bestScore = standPat;
     Iterator<Map.Entry<ChessMove, ChessPosition>> it = p.getChildren().entrySet().iterator();
     while (it.hasNext()) {
       Map.Entry<ChessMove, ChessPosition> entry = it.next();
