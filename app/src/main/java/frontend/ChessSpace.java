@@ -95,7 +95,7 @@ public class ChessSpace implements Clickable {
     if (pieceImage != null) {
       pieceImage.fitHeightProperty().bind(this.pane.heightProperty());
       pieceImage.fitWidthProperty().bind(this.pane.widthProperty());
-      this.pane.getChildren().addFirst(pieceImage);
+      this.pane.getChildren().add(0, pieceImage);
     }
   }
 

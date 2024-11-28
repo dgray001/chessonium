@@ -22,6 +22,9 @@ public interface Evaluator {
       case "activity":
         evaluator = new Evaluator_Activity();
         break;
+      case "pawnstructure":
+        evaluator = new Evaluator_PawnStructure();
+        break;
       default:
         Logger.err("Unknown evaluator", evaluatorName);
         return null;

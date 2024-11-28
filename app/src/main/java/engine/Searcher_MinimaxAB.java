@@ -11,9 +11,13 @@ import utilities.MutableBoolean;
 
 public class Searcher_MinimaxAB extends Searcher {
   private ChessMove[] bestLine;
+  private ChessMove[] legalMoves;
 
   public void search(MutableBoolean stop) {
     Logger.log("Initial evaluation at depth 0: " + this.e.evaluate(this.p));
+    this.p.generateMoves();
+    this.p.trimCheckMoves();
+    this.legalMoves = this.p.getChildren().keySet().toArray(new ChessMove[this.p.getChildren().size()]);
     for (int d = 1; d <= this.depthLimit; d++) {
       Logger.log("Searching at depth", d);
       this.bestLine = this.searchDepthMinimax(d, -Float.MAX_VALUE, Float.MAX_VALUE, stop);
@@ -30,16 +34,42 @@ public class Searcher_MinimaxAB extends Searcher {
     float bestScore = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
     this.p.generateMoves(true);
     this.p.trimCheckMoves(true);
-    for (Map.Entry<ChessMove, ChessPosition> entry : this.p.getChildren().entrySet()) {
+    float[] scores = new float[this.legalMoves.length];
+    for (int i = 0; i < this.legalMoves.length; i++) {
       ChessMove[] currentLine = new ChessMove[d-1];
-      float score = this.minimax(entry.getValue(), d - 1, a, b, currentLine, (entry.getKey().end() & p.getAllPieces()) == 0, stop);
-      if ((this.p.isWhiteTurn() && score > bestScore) || (!this.p.isWhiteTurn() && score < bestScore)) {
-        bestScore = score;
-        line[0] = entry.getKey();
+      scores[i] = this.minimax(
+        this.p.getChildren().get(this.legalMoves[i]),
+        d - 1,
+        a,
+        b,
+        currentLine,
+        (this.legalMoves[i].end() & p.getAllPieces()) == 0,
+        stop
+      );
+      if ((this.p.isWhiteTurn() && scores[i] > bestScore) || (!this.p.isWhiteTurn() && scores[i] < bestScore)) {
+        bestScore = scores[i];
+        line[0] = this.legalMoves[i];
         System.arraycopy(currentLine, 0, line, 1, d - 1);
       }
       if (stop.get()) {
         return null;
+      }
+    }
+    for (int i = 0; i < this.legalMoves.length - 1; i++) {
+      boolean swapped = false;
+      for (int j = 0; j < this.legalMoves.length  - i - 1; j++) {
+        if ((this.p.isWhiteTurn() && scores[j] < scores[j + 1]) || (!this.p.isWhiteTurn() && scores[j] > scores[j + 1])) {
+          ChessMove t = this.legalMoves[j];
+          this.legalMoves[j] = this.legalMoves[j + 1];
+          this.legalMoves[j + 1] = t;
+          float tf = scores[j];
+          scores[j] = scores[j + 1];
+          scores[j + 1] = tf;
+          swapped = true;
+        }
+      }
+      if (!swapped) {
+        break;
       }
     }
     this.evaluation = bestScore;

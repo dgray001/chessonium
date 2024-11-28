@@ -7,7 +7,7 @@ public class ChessConstants {
   public static final int BOARD_SIZE = 8;
 
   // files are columns
-  public static final long[] files = new long[]{255, 255 << 8, 255 << 16, 255 << 24, 255 << 32, 255 << 40, 255 << 48, 255 << 56};
+  public static final long[] files = new long[]{255L, 255L << 8, 255L << 16, 255L << 24, 255L << 32, 255L << 40, 255L << 48, 255L << 56};
   // files are rows
   public static final long[] ranks = new long[]{
     0x0101010101010101L, // every 8th bit is 1, starting with the first bit

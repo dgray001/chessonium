@@ -38,78 +38,18 @@ public class Evaluator_Material implements Evaluator {
 
   public float _evaluate(ChessPosition p) {
     float e = 0;
-    long bb = p.getWPawns();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e += this.vPawn;
-      bb &= ~lsb;
-    }
-    bb = p.getWKnights();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e += this.vKnight;
-      bb &= ~lsb;
-    }
-    bb = p.getWBishops();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e += this.vBishop;
-      bb &= ~lsb;
-    }
-    bb = p.getWRooks();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e += this.vRook;
-      bb &= ~lsb;
-    }
-    bb = p.getWQueens();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e += this.vQueen;
-      bb &= ~lsb;
-    }
-    bb = p.getWKings();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e += this.vKing;
-      bb &= ~lsb;
-    }
-    bb = p.getBPawns();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e -= this.vPawn;
-      bb &= ~lsb;
-    }
-    bb = p.getBKnights();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e -= this.vKnight;
-      bb &= ~lsb;
-    }
-    bb = p.getBBishops();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e -= this.vBishop;
-      bb &= ~lsb;
-    }
-    bb = p.getBRooks();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e -= this.vRook;
-      bb &= ~lsb;
-    }
-    bb = p.getBQueens();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e -= this.vQueen;
-      bb &= ~lsb;
-    }
-    bb = p.getBKings();
-    while (bb != 0) {
-      long lsb = bb & -bb;
-      e -= this.vKing;
-      bb &= ~lsb;
-    }
+    e += this.vPawn * Long.bitCount(p.getWPawns());
+    e += this.vKnight * Long.bitCount(p.getWKings());
+    e += this.vBishop * Long.bitCount(p.getWBishops());
+    e += this.vRook * Long.bitCount(p.getWRooks());
+    e += this.vQueen * Long.bitCount(p.getWQueens());
+    e += this.vKing * Long.bitCount(p.getWKings());
+    e -= this.vPawn * Long.bitCount(p.getBPawns());
+    e -= this.vKnight * Long.bitCount(p.getBKings());
+    e -= this.vBishop * Long.bitCount(p.getBBishops());
+    e -= this.vRook * Long.bitCount(p.getBRooks());
+    e -= this.vQueen * Long.bitCount(p.getBQueens());
+    e -= this.vKing * Long.bitCount(p.getBKings());
     return e;
   }
 }

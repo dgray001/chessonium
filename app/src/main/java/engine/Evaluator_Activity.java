@@ -8,38 +8,18 @@ import chess.moves.KnightMoves;
 import chess.moves.QueenMoves;
 import chess.moves.RookMoves;
 
-public class Evaluator_Activity implements Evaluator {
-  protected float vPawn;
-  protected float vKnight;
-  protected float vBishop;
-  protected float vRook;
-  protected float vQueen;
-  protected float vKing;
+public class Evaluator_Activity extends Evaluator_Material {
   protected float aSpace;
   protected float aEnemySpace;
   protected float aEnemyPiece;
   protected float aKingSpace;
 
+  @Override
   public boolean _setConfig(String k, String v) {
+    if (super._setConfig(k, v)) {
+      return true;
+    }
     switch(k) {
-      case "vPawn":
-        this.vPawn = Evaluator.configFloat(v);
-        break;
-      case "vKnight":
-        this.vKnight = Evaluator.configFloat(v);
-        break;
-      case "vBishop":
-        this.vBishop = Evaluator.configFloat(v);
-        break;
-      case "vRook":
-        this.vRook = Evaluator.configFloat(v);
-        break;
-      case "vQueen":
-        this.vQueen = Evaluator.configFloat(v);
-        break;
-      case "vKing":
-        this.vKing = Evaluator.configFloat(v);
-        break;
       case "aSpace":
         this.aSpace = Evaluator.configFloat(v);
         break;
@@ -72,6 +52,7 @@ public class Evaluator_Activity implements Evaluator {
     return e;
   }
 
+  @Override
   public float _evaluate(ChessPosition p) {
     float e = 0;
     long wKing = KingMoves.getAllKingMoves(p.getWKings());
