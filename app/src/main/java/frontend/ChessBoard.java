@@ -1,5 +1,6 @@
 package frontend;
 
+import java.time.Instant;
 import java.util.Map;
 
 import chess.ChessConstants;
@@ -32,6 +33,8 @@ public class ChessBoard extends FrontendElement implements Clickable {
   private boolean pressed = false;
   private int selected_r = -1;
   private int selected_c = -1;
+
+  private long timeStart = 0L;
 
   public Node _drawInitial() {
     this.node = new GridPane();
@@ -145,6 +148,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
         Map.entry("pPassed", "0.3")
       )
     )));
+    this.timeStart = Instant.now().toEpochMilli();
   }
 
   public void spaceSelected(int r, int c) {
@@ -165,6 +169,9 @@ public class ChessBoard extends FrontendElement implements Clickable {
   }
 
   public void moveTargetPressed(int r, int c) {
+    if (!this.position.isWhiteTurn()) {
+      return;
+    }
     for (ChessMove mv : this.position.getChildren().keySet()) {
       int start = Long.numberOfTrailingZeros(mv.start());
       int start_r = start % 8;
@@ -184,6 +191,23 @@ public class ChessBoard extends FrontendElement implements Clickable {
     }
     this.propagatePosition();
     this.clearSelectedAnnotations();
+    if (!this.position.isWhiteTurn()) {
+      long timeS = this.timeStart;
+      new java.util.Timer().schedule( 
+        new java.util.TimerTask() {
+          @Override
+          public void run() {
+            ChessMove mv = engine.getTopMove();
+            position = position.getChildren().get(mv);
+            engine.playMove(mv);
+            propagatePosition();
+            clearSelectedAnnotations();
+            timeStart = Instant.now().toEpochMilli();
+          }
+        }, 
+        Instant.now().toEpochMilli() - timeS
+      );
+    }
   }
 
   private void propagatePosition() {

@@ -27,6 +27,13 @@ public class ChessEngine extends Thread {
     return engine;
   }
 
+  public ChessMove getTopMove() {
+    if (!this.isAlive() || this.s == null) {
+      return null;
+    }
+    return this.s.bestMove;
+  }
+
   public void playMove(ChessMove mv) {
     if (!this.isAlive()) {
       return;
