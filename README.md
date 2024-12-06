@@ -9,7 +9,7 @@ v0.1.11: Transposition table
 Can read in configuration from file
 Have engine trade pieces if ahead in material (and avoid if behind)
 UI for playing against engine as white or black (timer?)
-Add small transposition table (~1gb)
+Add small transposition table (~100mb)
 
 Need to test everything with zobrist hashing (positions seen, moves since zero, 3 move repitition, etc...)
 
