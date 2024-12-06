@@ -15,10 +15,9 @@ import utilities.Logger;
 import lombok.Getter;
 
 public class ChessPosition {
-  // position key set deterministically by this class
+  // Zobrist key
   @Getter
-  private int key;
-  private static int nextKey = 1;
+  private long key;
   // bitboard representation
   @Getter
   private long wPawns = 0L;
@@ -55,9 +54,16 @@ public class ChessPosition {
   @Getter
   private boolean whiteTurn;
   // bitwise representation of which space the current player's turn can attack en passant
+  @Getter
   private long enPassant;
   // bitwise representation of castling rights -> white queenside, white kingside, black queenside, black kingside
+  @Getter
   private byte castlingRights;
+  // rules needed for draws
+  @Getter
+  private Map<Long, Byte> positionsSeen;
+  @Getter
+  private byte movesSinceZero = 0;
   // all valid child positions
   @Getter
   private Map<ChessMove, ChessPosition> children;
@@ -70,10 +76,11 @@ public class ChessPosition {
   private float evaluation;
   @Getter
   private boolean evaluated = false;
+  @Getter
+  private ChessResult gameResult = ChessResult.NOT_OVER;
 
   public static ChessPosition createPosition(ChessStartPosition startPosition) {
     ChessPosition position = new ChessPosition();
-    ChessPosition.setKey(position);
     switch(startPosition) {
       case STANDARD:
         position.setupPiecesStandard();
@@ -82,7 +89,18 @@ public class ChessPosition {
         Logger.err("Unknown start position: " + startPosition);
         break;
     }
+    position.key = ZobristHasher.generateZobristHash(position);
+    position.positionsSeen = new HashMap<Long, Byte>();
+    position.addKeyToPositions();
     return position;
+  }
+
+  private void addKeyToPositions() {
+    if (this.positionsSeen.containsKey(this.key)) {
+      this.positionsSeen.put(this.key, (byte)(this.positionsSeen.get(this.key) + 1));
+    } else {
+      this.positionsSeen.put(this.key, (byte) 1);
+    }
   }
 
   public static byte coordinatesToByte(int r, int c) {
@@ -383,9 +401,17 @@ public class ChessPosition {
     return Character.toString((char)('A' + c[1])) + Integer.toString((char)(c[0] + 1));
   }
 
-  public ChessResult getGameResult() {
+  private ChessResult calculateGameResult() {
     if (this.children.size() > 0) {
-      // TODO: check insufficient material, draw by repitition, and 50 move rule
+      if (this.positionsSeen.get(this.key) >= 3) {
+        return ChessResult.DRAW_REPITITION;
+      }
+      if (this.movesSinceZero >= 50) {
+        return ChessResult.DRAW_50_MOVE_RULE;
+      }
+      if (this.insufficientMaterial()) {
+        return ChessResult.DRAW_INSUFFICIENT_MATERIAL;
+      }
       return ChessResult.NOT_OVER;
     }
     if (!this.inCheck()) {
@@ -395,6 +421,23 @@ public class ChessPosition {
       return ChessResult.BLACK_CHECKMATE;
     }
     return ChessResult.WHITE_CHECKMATE;
+  }
+
+  private boolean insufficientMaterial() {
+    if (
+      (this.wPawns != 0) ||
+      (this.wRooks != 0) ||
+      (this.wQueens != 0) ||
+      (this.bPawns != 0) ||
+      (this.bRooks != 0) ||
+      (this.bQueens != 0)
+    ) {
+      return false;
+    }
+    return ((
+      Long.bitCount(this.wKnights) + Long.bitCount(this.wBishops) +
+      Long.bitCount(this.bKnights) + Long.bitCount(this.bBishops)
+    ) < 1);
   }
 
   private synchronized void generatePawnMoves(byte type, long p) {
@@ -559,6 +602,7 @@ public class ChessPosition {
 
   public ChessPosition copyPosition() {
     ChessPosition result = new ChessPosition();
+    result.key = this.key;
     result.wPawns = this.wPawns;
     result.wKnights = this.wKnights;
     result.wBishops = this.wBishops;
@@ -577,13 +621,25 @@ public class ChessPosition {
     result.whiteTurn = this.whiteTurn;
     result.enPassant = this.enPassant;
     result.castlingRights = this.castlingRights;
+    result.positionsSeen = new HashMap<>(this.positionsSeen);
+    result.movesSinceZero = this.movesSinceZero;
     return result;
   }
 
   private ChessPosition addMove(ChessMove mv) {
     ChessPosition result = this.copyPosition();
     result.whiteTurn = !this.whiteTurn;
+    result.movesSinceZero++;
+    if (mv.piece() == ChessPieceType.PAWN_VALUE) {
+      result.movesSinceZero = 0;
+    }
+    result.key ^= ZobristHasher.turnKey()[0];
+    result.key ^= ZobristHasher.turnKey()[1];
     result.enPassant = mv.enPassant();
+    result.key ^= ZobristHasher.enPassantKeys()[Long.numberOfTrailingZeros(this.enPassant)];
+    result.key ^= ZobristHasher.enPassantKeys()[Long.numberOfTrailingZeros(result.enPassant)];
+    result.key ^= ZobristHasher.castlingRightsKey()[this.castlingRights];
+    result.key ^= ZobristHasher.castlingRightsKey()[result.castlingRights];
     long captureSquare = mv.end();
     if (mv.isEnPassant()) {
       captureSquare = this.whiteTurn ? (captureSquare >>> 1) : (captureSquare << 1);
@@ -640,13 +696,8 @@ public class ChessPosition {
       }
     }
     this.children.put(mv, result);
-    ChessPosition.setKey(result);
+    result.addKeyToPositions();
     return result;
-  }
-
-  private static synchronized void setKey(ChessPosition child) {
-    child.key = ChessPosition.nextKey;
-    ChessPosition.nextKey++;
   }
 
   private void moveWhitePiece(byte piece, long start, long end) {
@@ -654,6 +705,8 @@ public class ChessPosition {
     this.allPieces |= end;
     this.whitePieces &= ~start;
     this.whitePieces |= end;
+    this.key ^= ZobristHasher.pieceKeys()[0][(piece & ~ChessPiece.WHITE_BIT) - 1][Long.numberOfTrailingZeros(start)];
+    this.key ^= ZobristHasher.pieceKeys()[0][(piece & ~ChessPiece.WHITE_BIT) - 1][Long.numberOfTrailingZeros(end)];
     switch(piece) {
       case ChessPiece.WHITE_PAWN:
         this.wPawns &= ~start;
@@ -687,6 +740,8 @@ public class ChessPosition {
     this.allPieces |= end;
     this.whitePieces &= ~start;
     this.whitePieces |= end;
+    this.key ^= ZobristHasher.pieceKeys()[0][(piece & ~ChessPiece.WHITE_BIT) - 1][Long.numberOfTrailingZeros(start)];
+    this.key ^= ZobristHasher.pieceKeys()[0][(promotionPiece & ~ChessPiece.WHITE_BIT) - 1][Long.numberOfTrailingZeros(end)];
     switch(piece) {
       case ChessPiece.WHITE_PAWN:
         this.wPawns &= ~start;
@@ -734,6 +789,8 @@ public class ChessPosition {
     this.allPieces |= end;
     this.blackPieces &= ~start;
     this.blackPieces |= end;
+    this.key ^= ZobristHasher.pieceKeys()[1][piece - 1][Long.numberOfTrailingZeros(start)];
+    this.key ^= ZobristHasher.pieceKeys()[1][piece - 1][Long.numberOfTrailingZeros(end)];
     switch(piece) {
       case ChessPiece.BLACK_PAWN:
         this.bPawns &= ~start;
@@ -767,6 +824,8 @@ public class ChessPosition {
     this.allPieces |= end;
     this.blackPieces &= ~start;
     this.blackPieces |= end;
+    this.key ^= ZobristHasher.pieceKeys()[1][piece - 1][Long.numberOfTrailingZeros(start)];
+    this.key ^= ZobristHasher.pieceKeys()[1][promotionPiece - 1][Long.numberOfTrailingZeros(end)];
     switch(piece) {
       case ChessPiece.BLACK_PAWN:
         this.bPawns &= ~start;
@@ -810,23 +869,75 @@ public class ChessPosition {
   }
 
   private void captureWhitePiece(long captureSquare) {
+    if ((captureSquare & this.whitePieces) == 0) {
+      return;
+    }
     this.whitePieces &= ~captureSquare;
-    this.wPawns &= ~captureSquare;
-    this.wKnights &= ~captureSquare;
-    this.wBishops &= ~captureSquare;
-    this.wRooks &= ~captureSquare;
-    this.wQueens &= ~captureSquare;
+    this.movesSinceZero = 0;
+    int i = Long.numberOfTrailingZeros(captureSquare);
+    if ((captureSquare & this.wPawns) != 0) {
+      this.wPawns &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[0][0][i];
+      return;
+    }
+    if ((captureSquare & this.wKnights) != 0) {
+      this.wKnights &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[0][1][i];
+      return;
+    }
+    if ((captureSquare & this.wBishops) != 0) {
+      this.wBishops &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[0][2][i];
+      return;
+    }
+    if ((captureSquare & this.wRooks) != 0) {
+      this.wRooks &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[0][3][i];
+      return;
+    }
+    if ((captureSquare & this.wQueens) != 0) {
+      this.wQueens &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[0][4][i];
+      return;
+    }
     this.wKings &= ~captureSquare;
+    this.key ^= ZobristHasher.pieceKeys()[0][5][i];
   }
 
   private void captureBlackPiece(long captureSquare) {
+    if ((captureSquare & this.blackPieces) == 0) {
+      return;
+    }
     this.blackPieces &= ~captureSquare;
-    this.bPawns &= ~captureSquare;
-    this.bKnights &= ~captureSquare;
-    this.bBishops &= ~captureSquare;
-    this.bRooks &= ~captureSquare;
-    this.bQueens &= ~captureSquare;
+    this.movesSinceZero = 0;
+    int i = Long.numberOfTrailingZeros(captureSquare);
+    if ((captureSquare & this.bPawns) != 0) {
+      this.bPawns &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[1][0][i];
+      return;
+    }
+    if ((captureSquare & this.bKnights) != 0) {
+      this.bKnights &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[1][1][i];
+      return;
+    }
+    if ((captureSquare & this.bBishops) != 0) {
+      this.bBishops &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[1][2][i];
+      return;
+    }
+    if ((captureSquare & this.bRooks) != 0) {
+      this.bRooks &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[1][3][i];
+      return;
+    }
+    if ((captureSquare & this.bQueens) != 0) {
+      this.bQueens &= ~captureSquare;
+      this.key ^= ZobristHasher.pieceKeys()[1][4][i];
+      return;
+    }
     this.bKings &= ~captureSquare;
+    this.key ^= ZobristHasher.pieceKeys()[1][5][i];
   }
 
   // Trims illegal moves that would put the king in check
@@ -835,6 +946,11 @@ public class ChessPosition {
   }
   public synchronized void trimCheckMoves(boolean force) {
     if (!force && (this.checkMovesTrimmed || !this.movesGenerated)) {
+      return;
+    }
+    this.gameResult = this.calculateGameResult();
+    if (this.gameResult != ChessResult.NOT_OVER) {
+      this.children.clear();
       return;
     }
     Iterator<Map.Entry<ChessMove, ChessPosition>> it = this.children.entrySet().iterator();

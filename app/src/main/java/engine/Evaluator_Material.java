@@ -2,7 +2,7 @@ package engine;
 
 import chess.ChessPosition;
 
-public class Evaluator_Material implements Evaluator {
+public class Evaluator_Material extends Evaluator {
   protected float vPawn;
   protected float vKnight;
   protected float vBishop;

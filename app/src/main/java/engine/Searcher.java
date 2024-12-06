@@ -50,6 +50,7 @@ public abstract class Searcher {
     this.n = 0;
     this.bestMove = null;
     this.evaluation = this.p.isWhiteTurn() ? -Float.MAX_VALUE : Float.MAX_VALUE;
+    this.e.clearTranspositionTable();
   }
 
   public abstract void search(MutableBoolean stop);

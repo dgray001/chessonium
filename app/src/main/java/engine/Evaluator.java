@@ -4,9 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import chess.ChessPosition;
+import lombok.Getter;
 import utilities.Logger;
 
-public interface Evaluator {
+abstract class Evaluator {
+  @Getter
+  private HashMap<Long, Float> transpositionTable = new HashMap<Long, Float>();
+  @Getter
+  private int maxTranspositionTableSize = 100_000;
+  private int n = 0;
+
   public static Evaluator create(String evaluatorName) {
     return Evaluator.create(evaluatorName, new HashMap<String, String>());
   }
@@ -33,13 +40,13 @@ public interface Evaluator {
     return evaluator;
   }
 
-  default void setConfig(Map<String, String> config) {
+  void setConfig(Map<String, String> config) {
     for (Map.Entry<String, String> entry : config.entrySet()) {
       this._setConfig(entry.getKey().trim(), entry.getValue().trim());
     }
   }
 
-  boolean _setConfig(String k, String v);
+  protected abstract boolean _setConfig(String k, String v);
 
   public static float configFloat(String v) {
     try {
@@ -68,12 +75,23 @@ public interface Evaluator {
     return false;
   }
 
-  default float evaluate(ChessPosition p) {
-    if (p.isEvaluated()) {
-      return p.getEvaluation();
+  public float evaluate(ChessPosition p) {
+    if (this.transpositionTable.containsKey(p.getKey())) {
+      this.n++;
+      return this.transpositionTable.get(p.getKey());
     }
-    return this._evaluate(p);
+    float e = p.isEvaluated() ? p.getEvaluation() : this._evaluate(p);
+    if (this.transpositionTable.size() < this.maxTranspositionTableSize) {
+      this.transpositionTable.put(p.getKey(), e);
+    }
+    return e;
   }
 
-  float _evaluate(ChessPosition p);
+  public void clearTranspositionTable() {
+    Logger.log("Transposition table hits: " + this.n);
+    this.transpositionTable.clear();
+    this.n = 0;
+  }
+
+  protected abstract float _evaluate(ChessPosition p);
 }

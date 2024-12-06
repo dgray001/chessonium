@@ -170,7 +170,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
 
   public void moveTargetPressed(int r, int c) {
     if (!this.position.isWhiteTurn()) {
-      return;
+      //return;
     }
     for (ChessMove mv : this.position.getChildren().keySet()) {
       int start = Long.numberOfTrailingZeros(mv.start());
@@ -191,7 +191,8 @@ public class ChessBoard extends FrontendElement implements Clickable {
     }
     this.propagatePosition();
     this.clearSelectedAnnotations();
-    if (!this.position.isWhiteTurn()) {
+    // For computer to move
+    /*if (!this.position.isWhiteTurn()) {
       long timeS = this.timeStart;
       new java.util.Timer().schedule( 
         new java.util.TimerTask() {
@@ -207,7 +208,7 @@ public class ChessBoard extends FrontendElement implements Clickable {
         }, 
         Instant.now().toEpochMilli() - timeS
       );
-    }
+    }*/
   }
 
   private void propagatePosition() {

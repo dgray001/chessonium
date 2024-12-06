@@ -2,7 +2,7 @@ package engine;
 
 import chess.ChessPosition;
 
-public class Evaluator_Equal implements Evaluator {
+public class Evaluator_Equal extends Evaluator {
   public boolean _setConfig(String k, String v) {
     return false;
   }

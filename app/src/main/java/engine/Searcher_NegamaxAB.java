@@ -21,6 +21,7 @@ public class Searcher_NegamaxAB extends Searcher {
     for (int d = 1; d <= this.depthLimit; d++) {
       Logger.log("Searching at depth", d);
       this.bestLine = this.searchDepthNegamax(d, -Float.MAX_VALUE, Float.MAX_VALUE, stop);
+      this.e.clearTranspositionTable();
       if (stop.get()) {
         break;
       }
@@ -101,7 +102,15 @@ public class Searcher_NegamaxAB extends Searcher {
     while (it.hasNext()) {
       Map.Entry<ChessMove, ChessPosition> entry = it.next();
       ChessMove[] currentLine = new ChessMove[d-1];
-      float score = -this.negamax(entry.getValue(), d - 1, -b, -a, -color, currentLine, (entry.getKey().end() & p.getAllPieces()) == 0, stop);
+      float score;
+      if (this.e.getTranspositionTable().containsKey(entry.getValue().getKey())) {
+        score = this.e.getTranspositionTable().get(entry.getValue().getKey());
+      } else {
+        score = -this.negamax(entry.getValue(), d - 1, -b, -a, -color, currentLine, (entry.getKey().end() & p.getAllPieces()) == 0, stop);
+        if (this.e.getTranspositionTable().size() < this.e.getMaxTranspositionTableSize()) {
+          this.e.getTranspositionTable().put(entry.getValue().getKey(), score);
+        }
+      }
       if (score > bestScore) {
         bestScore = score;
         line[0] = entry.getKey();
